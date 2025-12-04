@@ -1,0 +1,6058 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>踏詩遊唐</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Noto Serif TC', 'KaiTi', 'STKaiti', serif;
+      background: linear-gradient(135deg, #a8d5e2 0%, #b3e5d8 100%);
+      color: #2d5a5a;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .scene {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.8s ease, visibility 0s 0.8s;
+    }
+
+    .scene.active {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.8s ease, visibility 0s 0s;
+    }
+
+    /* 封面場景 */
+    .scene-cover {
+      background: linear-gradient(135deg, #87CEEB 0%, #B0E0E6 100%);
+    }
+
+    .cover-title {
+      font-size: 6em;
+      color: #2d5a5a;
+      margin-bottom: 80px;
+      letter-spacing: 0.3em;
+      text-shadow: 2px 2px 10px rgba(0,0,0,0.2);
+      font-weight: bold;
+    }
+
+    .menu-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .menu-btn {
+      padding: 15px 60px;
+      font-size: 1.8em;
+      background: linear-gradient(135deg, #5a8a8a 0%, #4a9d9d 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      letter-spacing: 0.3em;
+      box-shadow: 0 5px 20px rgba(90,138,138,0.5);
+      transition: all 0.3s ease;
+    }
+
+    .menu-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(90,138,138,0.7);
+    }
+
+    .menu-btn.secondary {
+      background: linear-gradient(135deg, rgba(90,138,138,0.7) 0%, rgba(74,157,157,0.7) 100%);
+    }
+
+    /* 開場場景 */
+    .scene-opening {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      flex-direction: column;
+      padding: 40px;
+    }
+
+    .opening-text {
+      max-width: 900px;
+      padding: 40px;
+      background: linear-gradient(135deg, rgba(139,69,19,0.8) 0%, rgba(101,67,33,0.8) 100%);
+      border: 4px solid #d4af37;
+      border-radius: 20px;
+      margin-bottom: 30px;
+      font-size: 1.8em;
+      color: #e0f7fa;
+      line-height: 2.5;
+      text-align: justify;
+      text-indent: 2em;
+      letter-spacing: 0.15em;
+    }
+
+    /* 旁白動畫 */
+    .narration {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(20,20,20,0.85) 100%);
+      color: #ffd700;
+      padding: 25px 40px;
+      border-radius: 15px;
+      border: 3px solid #d4af37;
+      font-size: 1.6em;
+      max-width: 80%;
+      text-align: center;
+      z-index: 2500;
+      pointer-events: none;
+      letter-spacing: 0.15em;
+      line-height: 1.8;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+      animation: narrationFade 4s ease forwards;
+    }
+
+    @keyframes narrationFade {
+      0% { opacity:0; transform: translate(-50%,20px); }
+      10% { opacity:1; transform: translate(-50%,0); }
+      85% { opacity:1; transform: translate(-50%,0); }
+      100% { opacity:0; transform: translate(-50%,-20px); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 封面場景 -->
+  <div class="scene scene-cover active">
+    <div class="cover-title">詩心穿唐</div>
+    <div class="menu-buttons">
+      <button id="start-btn" class="menu-btn">開始遊戲</button>
+      <button id="load-btn" class="menu-btn secondary">讀檔</button>
+    </div>
+  </div>
+
+  <!-- 開場場景 -->
+  <div class="scene scene-opening">
+    <div class="opening-text">
+      你穿越回了大唐，黃鶴樓的晨光映入眼簾……
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const startBtn = document.getElementById('start-btn');
+      const loadBtn = document.getElementById('load-btn');
+
+      const coverScene = document.querySelector('.scene-cover');
+      const openingScene = document.querySelector('.scene-opening');
+
+      startBtn.addEventListener('click', () => {
+        coverScene.classList.remove('active');
+        openingScene.classList.add('active');
+        showNarration("你穿越回了大唐，黃鶴樓的晨光映入眼簾……");
+      });
+
+      loadBtn.addEventListener('click', () => {
+        loadGame();
+      });
+
+      function showNarration(text) {
+        const narrationEl = document.createElement('div');
+        narrationEl.className = 'narration';
+        narrationEl.textContent = text;
+        document.body.appendChild(narrationEl);
+        setTimeout(() => {
+          narrationEl.remove();
+        }, 4000);
+      }
+
+      function loadGame() {
+        console.log("讀檔功能執行中...");
+        showNarration("存檔已讀取，你回到上次的位置。");
+      }
+    });
+  </script>
+
+</body>
+</html>
+  /* 地圖場景 */
+    .map-scene {
+      padding: 2%;
+      overflow-y: auto;
+    }
+
+    .map-container {
+      max-width: 95%;
+      width: 1600px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+      border: 4px solid #5a8a8a;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .map-title {
+      text-align: center;
+      font-size: 3em;
+      color: #2d5a5a;
+      margin: 0 0 30px 0;
+      letter-spacing: 0.3em;
+      text-shadow: 0 2px 5px rgba(255, 255, 255, 0.5);
+    }
+
+    .map-svg {
+      width: 100%;
+      height: auto;
+      min-height: 600px;
+    }
+
+    .location-marker {
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .location-marker:hover {
+      transform: scale(1.08);
+    }
+
+    .location-marker circle {
+      fill: #5a8a8a;
+      stroke: #2d5a5a;
+      stroke-width: 2;
+      transition: all 0.3s ease;
+    }
+
+    .location-marker:hover circle {
+      fill: #4a9d9d;
+      filter: drop-shadow(0 0 8px rgba(74, 157, 157, 0.8));
+    }
+
+    .location-marker text {
+      fill: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    /* 城市選擇地圖 */
+    .city-select-container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .region-name {
+      font-size: 3.5em;
+      color: #2d5a5a;
+      text-align: center;
+      letter-spacing: 0.3em;
+      text-shadow: 0 2px 10px rgba(255, 255, 255, 0.5);
+      margin: 0 0 40px 0;
+    }
+
+    .city-select-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 30px;
+      margin: 40px 0;
+    }
+
+    .city-select-card {
+      height: 180px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .city-select-card:hover {
+      transform: translateY(-8px);
+    }
+
+    .city-select-icon {
+      font-size: 5em;
+      margin-bottom: 15px;
+    }
+
+    .city-select-name {
+      font-size: 2em;
+      color: #2d5a5a;
+      letter-spacing: 0.3em;
+      text-align: center;
+      text-shadow: 0 2px 5px rgba(255, 255, 255, 0.8);
+    }
+
+    /* 城市地圖 */
+    .city-map-container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .city-map-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .city-name {
+      font-size: 3.5em;
+      color: #2d5a5a;
+      letter-spacing: 0.3em;
+      text-shadow: 0 2px 10px rgba(255, 255, 255, 0.5);
+      margin: 0 0 20px 0;
+    }
+
+    .city-locations {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 25px;
+      margin: 40px 0;
+    }
+
+    .location-card {
+      height: 180px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .location-card:hover {
+      transform: translateY(-8px);
+    }
+
+    .location-card.locked {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .location-icon {
+      font-size: 4em;
+      margin-bottom: 15px;
+    }
+
+    .location-label {
+      font-size: 1.6em;
+      color: #2d5a5a;
+      letter-spacing: 0.2em;
+      text-align: center;
+      text-shadow: 0 2px 5px rgba(255, 255, 255, 0.8);
+    }
+
+    .location-note {
+      font-size: 1em;
+      color: #666;
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    /* 街市場景 */
+    .market-scene {
+      padding: 3%;
+      overflow-y: auto;
+    }
+
+    .market-container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .market-title {
+      font-size: 3em;
+      color: #2d5a5a;
+      text-align: center;
+      margin-bottom: 40px;
+      letter-spacing: 0.3em;
+      text-shadow: 0 2px 10px rgba(255, 255, 255, 0.5);
+    }
+
+    .market-shops {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 25px;
+      margin: 40px 0;
+    }
+
+    .market-shop-card {
+      height: 180px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .market-shop-card:hover {
+      transform: translateY(-8px);
+    }
+
+    /* 商店場景 */
+    .shop-scene {
+      padding: 3%;
+      overflow-y: auto;
+    }
+
+    .shop-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, rgba(139, 69, 19, 0.7) 0%, rgba(101, 67, 33, 0.7) 100%);
+      border: 4px solid #d4af37;
+      border-radius: 20px;
+      padding: 40px;
+    }
+
+    .shop-title {
+      font-size: 3em;
+      color: #ffd700;
+      text-align: center;
+      margin-bottom: 20px;
+      letter-spacing: 0.3em;
+    }
+
+    .shop-description {
+      text-align: center;
+      color: #b3e5d8;
+      font-size: 1.4em;
+      line-height: 1.8;
+      margin-bottom: 25px;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+    }
+
+    .money-display {
+      text-align: center;
+      font-size: 1.6em;
+      color: #ffd700;
+      margin: 20px 0;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+    }
+
+    .shop-items {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 20px;
+      margin: 30px 0;
+    }
+
+    .shop-item {
+      background: rgba(0, 0, 0, 0.3);
+      border: 2px solid #d4af37;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .shop-item:hover {
+      background: rgba(212, 175, 55, 0.2);
+      transform: scale(1.05);
+    }
+
+    .shop-item-icon {
+      font-size: 3em;
+      margin-bottom: 10px;
+    }
+
+    .shop-item-name {
+      font-size: 1.4em;
+      color: #b3e5d8;
+      margin-bottom: 10px;
+    }
+
+    .shop-item-price {
+      font-size: 1.2em;
+      color: #ffd700;
+    }
+
+    /* 詩詞   動場景 */
+    .poetry-scene {
+      padding: 3%;
+      overflow-y: auto;
+    }
+
+    .poetry-container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .poetry-description {
+      background: linear-gradient(135deg, rgba(90, 138, 138, 0.4) 0%, rgba(74, 157, 157, 0.4) 100%);
+      border: 3px solid #5a8a8a;
+      border-radius: 15px;
+      padding: 30px;
+      margin-bottom: 30px;
+      color: #e0f7fa;
+      font-size: 1.7em;
+      line-height: 2.2;
+      text-align: center;
+      letter-spacing: 0.12em;
+    }
+
+    .poetry-choices {
+      display: flex;
+      gap: 20px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+
+    .choice-btn {
+      flex: 1;
+      min-width: 200px;
+      padding: 25px;
+      font-size: 1.7em;
+      background: linear-gradient(135deg, rgba(90, 138, 138, 0.4) 0%, rgba(74, 157, 157, 0.4) 100%);
+      border: 3px solid #5a8a8a;
+      color: #e0f7fa;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'Noto Serif TC', 'KaiTi', serif;
+      letter-spacing: 0.2em;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .choice-btn:hover {
+      background: linear-gradient(135deg, #5a8a8a 0%, #4a9d9d 100%);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(90, 138, 138, 0.7);
+    }
+
+    /* 白幕詩詞顯示 */
+    .poetry-reveal-scene {
+      background: #ffffff;
+    }
+
+    .poetry-reveal-container {
+      max-width: 900px;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .poetry-reveal-title {
+      font-size: 3.2em;
+      color: #2d5a5a;
+      margin-bottom: 25px;
+      letter-spacing: 0.3em;
+      opacity: 0;
+    }
+
+    .poetry-reveal-author {
+      font-size: 2em;
+      color: #5a8a8a;
+      margin-bottom: 50px;
+      opacity: 0;
+    }
+
+    .poetry-reveal-verse {
+      font-size: 2.6em;
+      color: #2d5a5a;
+      line-height: 2.8;
+      letter-spacing: 0.35em;
+      margin: 35px 0;
+      opacity: 0;
+    }
+
+    .poetry-reveal-verse.show {
+      animation: fadeInVerse 2.5s ease forwards;
+    }
+
+    @keyframes fadeInVerse {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .continue-btn {
+      margin-top: 50px;
+      padding: 20px 60px;
+      font-size: 1.8em;
+      background: linear-gradient(135deg, #5a8a8a 0%, #4a9d9d 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Noto Serif TC', 'KaiTi', serif;
+      letter-spacing: 0.2em;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 20px rgba(90, 138, 138, 0.5);
+    }
+
+    .continue-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(90, 138, 138, 0.7);
+    }
+
+    .back-btn {
+      margin-top: 30px;
+      padding: 18px 50px;
+      font-size: 1.6em;
+      background: linear-gradient(135deg, rgba(90, 90, 90, 0.8) 0%, rgba(70, 70, 70, 0.8) 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Noto Serif TC', 'KaiTi', serif;
+      letter-spacing: 0.2em;
+      transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .input-error {
+      color: #ff6b6b;
+      font-size: 1.2em;
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    /* 店小二命名場景 */
+    .scene-naming {
+      background: linear-gradient(135deg, #8b7355 0%, #6b5742 100%);
+      flex-direction: column;
+    }
+
+    .naming-container {
+      max-width: 800px;
+      padding: 40px;
+      background: linear-gradient(135deg, rgba(245, 222, 179, 0.95) 0%, rgba(222, 184, 135, 0.95) 100%);
+      border: 4px solid #8b6f47;
+      border-radius: 20px;
+    }
+
+    .waiter-scene-content {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+
+    .waiter-character {
+      width: 200px;
+      height: 280px;
+      flex-shrink: 0;
+    }
+
+    .waiter-dialogue {
+      flex: 1;
+      font-size: 1.8em;
+      color: #2d5a5a;
+      line-height: 2.2;
+      letter-spacing: 0.15em;
+      text-align: left;
+      padding: 25px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 15px;
+      border: 3px solid #8b6f47;
+    }
+
+    @media (max-width: 768px) {
+      .quest-panel {
+        width: 220px;
+      }
+
+      .round-button {
+        width: 60px;
+        height: 60px;
+      }
+
+      .city-locations, .city-select-grid, .market-shops {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body><!-- 遊戲UI疊加層 -->
+  <div class="game-ui-overlay" id="gameUI" style="display: none;">
+   <div class="top-bar">
+    <div class="info-box" id="seasonDisplay">
+     春季 上旬
+    </div>
+    <div class="info-box" id="actionDisplay">
+     行動點: 5/5
+    </div>
+    <div class="info-box" id="moneyDisplay">
+     💰 100兩
+    </div>
+   </div>
+   <div class="quest-panel">
+    <div class="quest-title">
+     任務
+    </div>
+    <div class="quest-section">
+     <div class="quest-section-header" onclick="toggleQuestSection('main')"><span>🎯 主線任務</span> <span id="mainToggle">▼</span>
+     </div>
+     <div class="quest-list" id="mainQuestList"></div>
+    </div>
+    <div class="quest-section">
+     <div class="quest-section-header" onclick="toggleQuestSection('side')"><span>📋 支線任務</span> <span id="sideToggle">▼</span>
+     </div>
+     <div class="quest-list" id="sideQuestList"></div>
+    </div>
+   </div>
+   <div class="bottom-buttons">
+    <div class="round-button save" onclick="openSaveModal()">
+     <div class="button-icon">
+      💾
+     </div>
+     <div class="button-label">
+      存檔
+     </div>
+    </div>
+    <div class="round-button" onclick="openInventory()">
+     <div class="button-icon">
+      🎒
+     </div>
+     <div class="button-label">
+            
+     </div>
+    </div>
+   </div>
+  </div><!-- 存檔模態框 -->
+  <div class="modal-overlay" id="saveModal">
+   <div class="modal-content"><button class="modal-close" onclick="closeSaveModal()">×</button>
+    <h2 class="modal-title">存檔</h2>
+    <div class="save-input-group"><label class="save-input-label">存檔名稱：</label> <input type="text" class="save-input" id="saveNameInput" placeholder="輸入存檔名稱..." maxlength="30">
+    </div>
+    <div class="modal-buttons"><button class="modal-btn" onclick="confirmSave()">確認存檔</button> <button class="modal-btn cancel" onclick="closeSaveModal()">   消</button>
+    </div>
+   </div>
+  </div><!-- 讀檔模態框 -->
+  <div class="modal-overlay" id="loadModal">
+   <div class="modal-content"><button class="modal-close" onclick="closeLoadModal()">×</button>
+    <h2 class="modal-title">讀取存檔</h2>
+    <div class="save-list" id="saveList"></div>
+    <div class="modal-buttons"><button class="modal-btn cancel" onclick="closeLoadModal()">取消</button>
+    </div>
+   </div>
+  </div><!-- 包袱模態框 -->
+  <div class="modal-overlay" id="inventoryModal">
+   <div class="modal-content"><button class="modal-close" onclick="closeInventory()">×</button>
+    <h2 class="modal-title">包袱</h2>
+    <div class="money-display">
+     持有銀兩：<span id="modalMoneyDisplay">100</span> 兩
+    </div>
+    <h3 style="color: #ffd700; font-size: 1.8em; margin: 20px 0;">身上物品</h3>
+    <div class="inventory-grid" id="inventoryGrid"></div>
+    <div style="text-align: center; margin-top: 30px;"><button class="continue-btn" onclick="closeInventory()">關閉</button>
+    </div>
+   </div>
+  </div>
+  <div class="game-container" id="gameContainer"><!-- 場景1: 開場劇情 -->
+   <div class="scene scene-opening" id="sceneOpening">
+    <div class="opening-text">
+     <p class="opening-paragraph">大唐開元盛世，天寶年間。長安城內繁華喧囂，胡商絡   不絕，四海賓朋雲集。你自幼飽讀詩書，心懷遊歷天下、結交名士之志。</p>
+     <p class="opening-paragraph">某日，你於書肆中偶得《唐詩選集》殘卷，其中詩句雋永動人，令你心馳神往。你決意離開家鄉，踏上詩境之旅，尋訪大唐各地名勝，體悟詩人筆下的山川風物……</p>
+     <p class="opening-paragraph">臨行前，母親為你備好行囊，父親贈你百兩銀子。你背起包袱，踏出家門，開啟屬於自己的傳奇。</p>
+     <div style="text-align: center; margin-top: 30px;"><button class="continue-btn" onclick="goToNaming()">踏上旅途</button>
+     </div>
+    </div>
+   </div><!-- 場景2: 店小二命名 -->
+   <div class="scene scene-naming" id="sceneNaming">
+    <div class="naming-container">
+     <div class="waiter-scene-content"><!-- 店小二角色 SVG -->
+      <svg class="waiter-character" viewbox="0 0 200 280" xmlns="http://www.w3.org/2000/svg"><!-- 身體 --> <ellipse cx="100" cy="250" rx="50" ry="28" fill="#8B4513" /> <rect x="60" y="130" width="80" height="120" rx="12" fill="#D2691E" /> <!-- 頭部 --> <circle cx="100" cy="60" r="35" fill="#FFE4C4" /> <!-- 頭髮（髮髻） --> <circle cx="100" cy="35" r="18" fill="#2C1810" /> <rect x="92" y="28" width="16" height="10" fill="#2C1810" /> <!-- 眼睛 --> <circle cx="88" cy="58" r="4" fill="#000" /> <circle cx="112" cy="58" r="4" fill="#000" /> <!-- 笑容 --> <path d="M 85 72 Q 100 80 115 72" stroke="#000" stroke-width="3" fill="none" /> <!-- 手臂 --> <rect x="35" y="140" width="20" height="60" rx="10" fill="#FFDAB9" /> <rect x="145" y="140" width="20" height="60" rx="10" fill="#FFDAB9" /> <!-- 茶壺（左手拿著） --> <ellipse cx="30" cy="195" rx="15" ry="12" fill="#8B7355" /> <rect x="20" y="185" width="20" height="15" rx="3" fill="#A0826D" /> <path d="M 20 192 L 15 192 L 15 198 L 20 198" fill="#8B7355" /> <circle cx="30" cy="180" r="3" fill="#654321" /> <!-- 茶杯（右手拿著） --> <rect x="158" y="190" width="18" height="20" rx="2" fill="#FFF" stroke="#8B7355" stroke-width="2" /> <ellipse cx="167" cy="192" rx="9" ry="3" fill="#90EE90" /> <!--    裙 --> <polygon points="70,140 130,140 135,250 65,250" fill="#FFF" opacity="0.7" stroke="#CCC" stroke-width="2" /> <!-- 腰帶 --> <rect x="55" y="140" width="90" height="8" fill="#8B4513" />
+      </svg>
+      <div class="waiter-dialogue">
+       「客官您好！小的是這客棧的店小二。看您這打扮，是要出遠門吧？不知客官尊姓大名？」
+      </div>
+     </div>
+     <div class="name-input-container"><input type="text" id="playerNameInput" class="name-input" placeholder="告訴店小二你的名字..." maxlength="10">
+      <div id="nameError" class="input-error"></div>
+      <div style="margin-top: 30px;"><button class="continue-btn" onclick="confirmName()">告訴店小二</button>
+      </div>
+     </div>
+    </div>
+   </div><!-- 場景3:    面頁 -->
+   <div class="scene scene-cover active" id="sceneCover">
+    <h1 class="cover-title" id="gameTitle">踏詩遊唐</h1>
+    <div class="menu-buttons"><button class="menu-btn" onclick="startNewGame()">開始遊戲</button> <button class="menu-btn secondary" onclick="openLoadModal()">讀取存檔</button>
+    </div>
+   </div><!-- 其他場景保持不變... -->
+  </div>
+  <script>
+    // JavaScript code remains the same
+    const defaultConfig = { game_title: "踏詩遊唐" };
+    // ... rest of JavaScript code ...
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>踏詩遊唐</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Noto Serif TC', 'KaiTi', 'STKaiti', serif;
+      background: linear-gradient(135deg, #a8d5e2 0%, #b3e5d8 100%);
+      color: #2d5a5a;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    html {
+      height: 100%;
+    }
+
+    .game-ui-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    .top-bar {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .info-box {
+      background: linear-gradient(135deg, rgba(139, 69, 19, 0.9) 0%, rgba(101, 67, 33, 0.9) 100%);
+      border: 3px solid #d4af37;
+      border-radius: 12px;
+      padding: 12px 20px;
+      color: #ffd700;
+      font-size: 1.3em;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+      letter-spacing: 0.1em;
+    }
+
+    .quest-panel {
+      position: fixed;
+      left: 20px;
+      top: 20px;
+      width: 280px;
+      max-height: 80%;
+      background: linear-gradient(135deg, rgba(139, 69, 19, 0.95) 0%, rgba(101, 67, 33, 0.95) 100%);
+      border: 3px solid #d4af37;
+      border-radius: 15px;
+      padding: 20px;
+      pointer-events: auto;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+      overflow-y: auto;
+    }
+
+    .quest-title {
+      font-size: 1.8em;
+      color: #ffd700;
+      text-align: center;
+      margin-bottom: 20px;
+      letter-spacing: 0.2em;
+      border-bottom: 2px solid #d4af37;
+      padding-bottom: 10px;
+    }
+
+    .quest-section {
+      margin: 15px 0;
+    }
+
+    .quest-section-header {
+      font-size: 1.4em;
+      color: #ffeb3b;
+      margin-bottom: 10px;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .quest-section-header:hover {
+      background: rgba(212, 175, 55, 0.2);
+    }
+
+    .quest-list {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .quest-list.expanded {
+      max-height: 500px;
+    }
+
+    .quest-item {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border-left: 3px solid #ffd700;
+      font-size: 1.1em;
+      color: #b3e5d8;
+      line-height: 1.6;
+    }
+
+    .quest-item.completed {
+      opacity: 0.6;
+      border-left-color: #4caf50;
+    }
+
+    .bottom-buttons {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .round-button {
+      width: 75px;
+      height: 75px;
+      background: linear-gradient(135deg, rgba(139, 69, 19, 0.9) 0%, rgba(101, 67, 33, 0.9) 100%);
+      border: 3px solid #d4af37;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+      transition: all 0.3s ease;
+    }
+
+    .round-button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 8px 25px rgba(212, 175, 55, 0.8);
+    }
+
+    .round-button.save {
+      background: linear-gradient(135deg, rgba(90, 138, 138, 0.9) 0%, rgba(74, 157, 157, 0.9) 100%);
+      border-color: #5a8a8a;
+    }
+
+    .button-icon {
+      font-size: 2.2em;
+    }
+
+    .button-label {
+      font-size: 0.95em;
+      color: #ffd700;
+      margin-top: 3px;
+    }
+
+    .narration {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(20, 20, 20, 0.85) 100%);
+      color: #ffd700;
+      padding: 25px 40px;
+      border-radius: 15px;
+      border: 3px solid #d4af37;
+      font-size: 1.6em;
+      max-width: 80%;
+      text-align: center;
+      z-index: 2500;
+      pointer-events: none;
+      letter-spacing: 0.15em;
+      line-height: 1.8;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+      animation: narrationFade 4s ease forwards;
+    }
+
+    @keyframes narrationFade {
+      0% { opacity: 0; transform: translate(-50%, 20px); }
+      10% { opacity: 1; transform: translate(-50%, 0); }
+      85% { opacity: 1; transform: translate(-50%, 0); }
+      100% { opacity: 0; transform: translate(-50%, -20px); }
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      pointer-events: auto;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: linear-gradient(135deg, rgba(139, 69, 19, 0.98) 0%, rgba(101, 67, 33, 0.98) 100%);
+      border: 4px solid #d4af37;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 900px;
+      max-height: 85%;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+      position: relative;
+    }
+
+    .modal-title {
+      font-size: 2.5em;
+      color: #ffd700;
+      text-align: center;
+      margin-bottom: 30px;
+      letter-spacing: 0.3em;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 2.5em;
+      color: #ffd700;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 5px 15px;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: #fff;
+    }
+
+    .save-input-group {
+      margin: 25px 0;
+    }
+
+    .save-input-label {
+      display: block;
+      color: #ffd700;
+      font-size: 1.5em;
+      margin-bottom: 10px;
+      letter-spacing: 0.1em;
+    }
+
+    .save-input {
+      width: 100%;
+      padding: 15px;
+      font-size: 1.4em;
+      background: rgba(0, 0, 0, 0.3);
+      border: 2px solid #d4af37;
+      border-radius: 10px;
+      color: #b3e5d8;
+      font-family: 'Noto Serif TC', 'KaiTi', serif;
+    }
+
+    .save-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin: 20px 0;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .save-item {
+      background: rgba(0, 0, 0, 0.3);
+      border: 2px solid #d4af37;
+      border-radius: 10px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .save-item:hover {
+      background: rgba(212, 175, 55, 0.2);
+      transform: translateX(5px);
+    }
+
+    .save-item-name {
+      font-size: 1.6em;
+      color: #ffd700;
+      margin-bottom: 8px;
+    }
+
+    .save-item-info {
+      font-size: 1.2em;
+      color: #b3e5d8;
+      line-height: 1.6;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+
+    .modal-btn {
+      padding: 15px 40px;
+      font-size: 1.6em;
+      background: linear-gradient(135deg, #5a8a8a 0%, #4a9d9d 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Noto Serif TC', 'KaiTi', serif;
+      letter-spacing: 0.2em;
+      transition: all 0.3s ease;
+    }
+
+    .modal-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(90, 138, 138, 0.7);
+    }
+
+    .modal-btn.cancel {
+      background: linear-gradient(135deg, rgba(90, 90, 90, 0.8) 0%, rgba(70, 70, 70, 0.8) 100%);
+    }
+
+    .inventory-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .inventory-item {
+      background: rgba(0, 0, 0, 0.3);
+      border: 2px solid #d4af37;
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .item-icon {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+
+    .item-name {
+      font-size: 1.2em;
+      color: #b3e5d8;
+      margin-bottom: 5px;
+    }
+
+    .item-value {
+      font-size: 1em;
+      color: #ffd700;
+    }
+
+    .game-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transition: background 1s ease;
+    }
+
+    .scene {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.8s ease, visibility 0s 0.8s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .scene.active {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.8s ease, visibility 0s 0s;
+    }
+
+    /* 開場場景 */
+    .scene-opening {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      flex-direction: column;
+    }
+
+    .opening-text {
+      max-width: 900px;
+      padding: 40px;
+      background: linear-gradient(135deg, rgba(139, 69, 19, 0.8) 0%, rgba(101, 67, 33, 0.8) 100%);
+      border: 4px solid #d4af37;
+      border-radius: 20px;
+      margin-bottom: 30px;
+    }
+
+    .opening-paragraph {
+      font-size: 1.8em;
+      color: #e0f7fa;
+      line-height: 2.5;
+      letter-spacing: 0.15em;
+      margin: 25px 0;
+      text-align: justify;
+      text-indent: 2em;
+    }
+
+    .name-input-container {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .name-input-label {
+      font-size: 2em;
+      color: #ffd700;
+      margin-bottom: 20px;
+      letter-spacing: 0.2em;
+      display: block;
+    }
+
+    .name-input {
+      padding: 20px 30px;
+      font-size: 2em;
+      background: rgba(0, 0, 0, 0.4);
+      border: 3px solid #d4af37;
+      border-radius: 10px;
+      color: #ffd700;
+      font-family: 'Noto Serif TC', 'KaiTi', serif;
+      text-align: center;
+      letter-spacing: 0.2em;
+      min-width: 300px;
+    }
+
+    /* 封面頁 */
+    .scene-cover {
+      background: linear-gradient(135deg, #87CEEB 0%, #B0E0E6 100%);
+      flex-direction: column;
+    }
+
+    .cover-title {
+      font-size: 6em;
+      color: #2d5a5a;
+      margin-bottom: 80px;
+      letter-spacing: 0.3em;
+      text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+      font-weight: bold;
+    }
+
+    .menu-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .menu-btn {
+      padding: 15px 60px;
+      font-size: 1.8em;
+      background: linear-gradient(135deg, #5a8a8a 0%, #4a9d9d 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Noto Serif TC', 'KaiTi', serif;
+      letter-spacing: 0.3em;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 20px rgba(90, 138, 138, 0.5);
+    }
+
+    .menu-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(90, 138, 138, 0.7);
+    }
+
+    .menu-btn.secondary {
+      background: linear-gradient(135deg, rgba(90, 138, 138, 0.7) 0%, rgba(74, 157, 157, 0.7) 100%);
+    }
+
+    /*   圖場景 */
+    .map-scene {
+      padding: 2%;
+      overflow-y: auto;
+    }
+
+    .map-container {
+      max-width: 95%;
+      width: 1600px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+      border: 4px solid #5a8a8a;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .map-title {
+      text-align: center;
+      font-size: 3em;
+      color: #2d5a5a;
+      margin: 0 0 30px 0;
+      letter-spacing: 0.3em;
+      text-shadow: 0 2px 5px rgba(255, 255, 255, 0.5);
+    }
+
+    .map-svg {
+      width: 100%;
+      height: auto;
+      min-height: 600px;
+    }
+
+    .location-marker {
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .location-marker:hover {
+      transform: scale(1.08);
+    }
+
+    .location-marker circle {
+      fill: #5a8a8a;
+      stroke: #2d5a5a;
+      stroke-width: 2;
+      transition: all 0.3s ease;
+    }
+
+    .location-marker:hover circle {
+      fill: #4a9d9d;
+      filter: drop-shadow(0 0 8px rgba(74, 157, 157, 0.8));
+    }
+
+    .location-marker text {
+      fill: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    /* 城市選擇地   */
+    .city-select-container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .region-name {
+      font-size: 3.5em;
+      color: #2d5a5a;
+      text-align: center;
+      letter-spacing: 0.3em;
+      text-shadow: 0 2px 10px rgba(255, 255, 255, 0.5);
+      margin: 0 0 40px 0;
+    }
+
+    .city-select-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 30px;
+      margin: 40px 0;
+    }
+
+    .city-select-card {
+      height: 180px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .city-select-card:hover {
+      transform: translateY(-8px);
+    }
+
+    .city-select-icon {
+      font-size: 5em;
+      margin-bottom: 15px;
+    }
+
+    .city-select-name {
+      font-size: 2em;
+      color: #2d5a5a;
+      letter-spacing: 0.3em;
+      text-align: center;
+      text-shadow: 0 2px 5px rgba(255, 255, 255, 0.8);
+    }
+
+    /* 城市地圖 */
+    .city-map-container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .city-map-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .city-name {
+      font-size: 3.5em;
+      color: #2d5a5a;
+      letter-spacing: 0.3em;
+      text-shadow: 0 2px 10px rgba(255, 255, 255, 0.5);
+      margin: 0 0 20px 0;
+    }
+
+    .city-locations {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 25px;
+      margin: 40px 0;
+    }
+
+    .location-card {
+      height: 180px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .location-card:hover {
+      transform: translateY(-8px);
+    }
+
+    .location-card.locked {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .location-icon {
+      font-size: 4em;
+      margin-bottom: 15px;
+    }
+
+    .location-label {
+      font-size: 1.6em;
+      color: #2d5a5a;
+      letter-spacing: 0.2em;
+      text-align: center;
+      text-shadow: 0 2px 5px rgba(255, 255, 255, 0.8);
+    }
+
+    .location-note {
+      font-size: 1em;
+      color: #666;
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    /* 街市場景 */
+    .market-scene {
+      padding: 3%;
+      overflow-y: auto;
+    }
+
+    .market-container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .market-title {
+      font-size: 3em;
+      color: #2d5a5a;
+      text-align: center;
+      margin-bottom: 40px;
+      letter-spacing: 0.3em;
+      text-shadow: 0 2px 10px rgba(255, 255, 255, 0.5);
+    }
+
+    .market-shops {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 25px;
+      margin: 40px 0;
+    }
+
+    .market-shop-card {
+      height: 180px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .market-shop-card:hover {
+      transform: translateY(-8px);
+    }
+
+    /* 商店場景 */
+    .shop-scene {
+      padding: 3%;
+      overflow-y: auto;
+    }
+
+    .shop-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, rgba(139, 69, 19, 0.7) 0%, rgba(101, 67, 33, 0.7) 100%);
+      border: 4px solid #d4af37;
+      border-radius: 20px;
+      padding: 40px;
+    }
+
+    .shop-title {
+      font-size: 3em;
+      color: #ffd700;
+      text-align: center;
+      margin-bottom: 20px;
+      letter-spacing: 0.3em;
+    }
+
+    .shop-description {
+      text-align: center;
+      color: #b3e5d8;
+      font-size: 1.4em;
+      line-height: 1.8;
+      margin-bottom: 25px;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+    }
+
+    .money-display {
+      text-align: center;
+      font-size: 1.6em;
+      color: #ffd700;
+      margin: 20px 0;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+    }
+
+    .shop-items {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 20px;
+      margin: 30px 0;
+    }
+
+    .shop-item {
+      background: rgba(0, 0, 0, 0.3);
+      border: 2px solid #d4af37;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .shop-item:hover {
+      background: rgba(212, 175, 55, 0.2);
+      transform: scale(1.05);
+    }
+
+    .shop-item-icon {
+      font-size: 3em;
+      margin-bottom: 10px;
+    }
+
+    .shop-item-name {
+      font-size: 1.4em;
+      color: #b3e5d8;
+      margin-bottom: 10px;
+    }
+
+    .shop-item-price {
+      font-size: 1.2em;
+      color: #ffd700;
+    }
+
+    /* 詩詞互動場景 */
+    .poetry-scene {
+      padding: 3%;
+      overflow-y: auto;
+    }
+
+    .poetry-container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .poetry-description {
+      background: linear-gradient(135deg, rgba(90, 138, 138, 0.4) 0%, rgba(74, 157, 157, 0.4) 100%);
+      border: 3px solid #5a8a8a;
+      border-radius: 15px;
+      padding: 30px;
+      margin-bottom: 30px;
+      color: #e0f7fa;
+      font-size: 1.7em;
+      line-height: 2.2;
+      text-align: center;
+      letter-spacing: 0.12em;
+    }
+
+    .poetry-choices {
+      display: flex;
+      gap: 20px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+
+    .choice-btn {
+      flex: 1;
+      min-width: 200px;
+      padding: 25px;
+      font-size: 1.7em;
+      background: linear-gradient(135deg, rgba(90, 138, 138, 0.4) 0%, rgba(74, 157, 157, 0.4) 100%);
+      border: 3px solid #5a8a8a;
+      color: #e0f7fa;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'Noto Serif TC', 'KaiTi', serif;
+      letter-spacing: 0.2em;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .choice-btn:hover {
+      background: linear-gradient(135deg, #5a8a8a 0%, #4a9d9d 100%);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(90, 138, 138, 0.7);
+    }
+
+    /* 白幕詩詞顯示 */
+    .poetry-reveal-scene {
+      background: #ffffff;
+    }
+
+    .poetry-reveal-container {
+      max-width: 900px;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .poetry-reveal-title {
+      font-size: 3.2em;
+      color: #2d5a5a;
+      margin-bottom: 25px;
+      letter-spacing: 0.3em;
+      opacity: 0;
+    }
+
+    .poetry-reveal-author {
+      font-size: 2em;
+      color: #5a8a8a;
+      margin-bottom: 50px;
+      opacity: 0;
+    }
+
+    .poetry-reveal-verse {
+      font-size: 2.6em;
+      color: #2d5a5a;
+      line-height: 2.8;
+      letter-spacing: 0.35em;
+      margin: 35px 0;
+      opacity: 0;
+    }
+
+    .poetry-reveal-verse.show {
+      animation: fadeInVerse 2.5s ease forwards;
+    }
+
+    @keyframes fadeInVerse {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .continue-btn {
+      margin-top: 50px;
+      padding: 20px 60px;
+      font-size: 1.8em;
+      background: linear-gradient(135deg, #5a8a8a 0%, #4a9d9d 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Noto Serif TC', 'KaiTi', serif;
+      letter-spacing: 0.2em;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 20px rgba(90, 138, 138, 0.5);
+    }
+
+    .continue-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(90, 138, 138, 0.7);
+    }
+
+    .back-btn {
+      margin-top: 30px;
+      padding: 18px 50px;
+      font-size: 1.6em;
+      background: linear-gradient(135deg, rgba(90, 90, 90, 0.8) 0%, rgba(70, 70, 70, 0.8) 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Noto Serif TC', 'KaiTi', serif;
+      letter-spacing: 0.2em;
+      transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .input-error {
+      color: #ff6b6b;
+      font-size: 1.2em;
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    /* 店小二命名場景 */
+    .scene-naming {
+      background: linear-gradient(135deg, #8b7355 0%, #6b5742 100%);
+      flex-direction: column;
+    }
+
+    .naming-container {
+      max-width: 800px;
+      padding: 40px;
+      background: linear-gradient(135deg, rgba(245, 222, 179, 0.95) 0%, rgba(222, 184, 135, 0.95) 100%);
+      border: 4px solid #8b6f47;
+      border-radius: 20px;
+    }
+
+    .waiter-scene-content {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+
+    .waiter-character {
+      width: 200px;
+      height: 280px;
+      flex-shrink: 0;
+    }
+
+    .waiter-dialogue {
+      flex: 1;
+      font-size: 1.8em;
+      color: #2d5a5a;
+      line-height: 2.2;
+      letter-spacing: 0.15em;
+      text-align: left;
+      padding: 25px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 15px;
+      border: 3px solid #8b6f47;
+    }
+
+    @media (max-width: 768px) {
+      .quest-panel {
+        width: 220px;
+      }
+
+      .round-button {
+        width: 60px;
+        height: 60px;
+      }
+
+      .city-locations, .city-select-grid, .market-shops {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  </style> <!-- 遊戲UI疊加層 -->
+  <div class="game-ui-overlay" id="gameUI" style="display: none;">
+   <div class="top-bar">
+    <div class="info-box" id="seasonDisplay">
+     春季 上旬
+    </div>
+    <div class="info-box" id="actionDisplay">
+     行動點: 5/5
+    </div>
+    <div class="info-box" id="moneyDisplay">
+     💰 100   
+    </div>
+   </div>
+   <div class="quest-panel">
+    <div class="quest-title">
+       務
+    </div>
+    <div class="quest-section">
+     <div class="quest-section-header" onclick="toggleQuestSection('main')"><span>🎯 主線任務</span> <span id="mainToggle">▼</span>
+     </div>
+     <div class="quest-list" id="mainQuestList"></div>
+    </div>
+    <div class="quest-section">
+     <div class="quest-section-header" onclick="toggleQuestSection('side')"><span>📋 支線任務</span> <span id="sideToggle">▼</span>
+     </div>
+     <div class="quest-list" id="sideQuestList"></div>
+    </div>
+   </div>
+   <div class="bottom-buttons">
+    <div class="round-button save" onclick="openSaveModal()">
+     <div class="button-icon">
+      💾
+     </div>
+     <div class="button-label">
+      存檔
+     </div>
+    </div>
+    <div class="round-button" onclick="openInventory()">
+     <div class="button-icon">
+      🎒
+     </div>
+     <div class="button-label">
+      包袱
+     </div>
+    </div>
+   </div>
+  </div><!-- 存檔模態框 -->
+  <div class="modal-overlay" id="saveModal">
+   <div class="modal-content"><button class="modal-close" onclick="closeSaveModal()">×</button>
+    <h2 class="modal-title">  檔</h2>
+    <div class="save-input-group"><label class="save-input-label">存檔名稱：</label> <input type="text" class="save-input" id="saveNameInput" placeholder="輸入存檔名稱..." maxlength="30">
+    </div>
+    <div class="modal-buttons"><button class="modal-btn" onclick="confirmSave()">確認存檔</button> <button class="modal-btn cancel" onclick="closeSaveModal()">取消</button>
+    </div>
+   </div>
+  </div><!-- 讀檔模態框 -->
+  <div class="modal-overlay" id="loadModal">
+   <div class="modal-content"><button class="modal-close" onclick="closeLoadModal()">×</button>
+    <h2 class="modal-title">讀取存檔</h2>
+    <div class="save-list" id="saveList"></div>
+    <div class="modal-buttons"><button class="modal-btn cancel" onclick="closeLoadModal()">取消</button>
+    </div>
+   </div>
+  </div><!-- 包袱模態框 -->
+  <div class="modal-overlay" id="inventoryModal">
+   <div class="modal-content"><button class="modal-close" onclick="closeInventory()">×</button>
+    <h2 class="modal-title">包袱</h2>
+    <div class="money-display">
+     持有銀兩：<span id="modalMoneyDisplay">100</span> 兩
+    </div>
+    <h3 style="color: #ffd700; font-size: 1.8em; margin: 20px 0;">身上物品</h3>
+    <div class="inventory-grid" id="inventoryGrid"></div>
+    <div style="text-align: center; margin-top: 30px;"><button class="continue-btn" onclick="closeInventory()">關閉</button>
+    </div>
+   </div>
+  </div>
+  <div class="game-container" id="gameContainer"><!-- 場景1: 開場劇情 -->
+   <div class="scene scene-opening" id="sceneOpening">
+    <div class="opening-text">
+     <p class="opening-paragraph">大唐開元盛世，天寶年間。長安城內繁華喧     胡商絡繹不絕，四海賓朋雲集。你  幼飽讀詩書，心懷遊歷天下、結交名士之志。</p>
+     <p class="opening-paragraph">某日，你於書肆中偶得《唐詩選集》殘卷，其中詩句雋永動人，令你心馳神往。你決意離開家鄉，踏上詩境之旅，尋訪大唐各地名勝，體悟詩人筆下的山川風物……</p>
+     <p class="opening-paragraph">臨行前，母   為你備好行   ，父親贈你百兩銀子。你背起包袱，踏出家門，開啟屬於自己的傳奇。</p>
+     <div style="text-align: center; margin-top: 30px;"><button class="continue-btn" onclick="goToNaming()">踏上旅途</button>
+     </div>
+    </div>
+   </div><!-- 場景2: 店小二命名 -->
+   <div class="scene scene-naming" id="sceneNaming">
+    <div class="naming-container">
+     <div class="waiter-scene-content"><!-- 店小二角色 SVG -->
+      <svg class="waiter-character" viewbox="0 0 200 280" xmlns="http://www.w3.org/2000/svg"><!-- 身體 --> <ellipse cx="100" cy="250" rx="50" ry="28" fill="#8B4513" /> <rect x="60" y="130" width="80" height="120" rx="12" fill="#D2691E" /> <!-- 頭部 --> <circle cx="100" cy="60" r="35" fill="#FFE4C4" /> <!-- 頭髮（髮   ） --> <circle cx="100" cy="35" r="18" fill="#2C1810" /> <rect x="92" y="28" width="16" height="10" fill="#2C1810" /> <!-- 眼睛 --> <circle cx="88" cy="58" r="4" fill="#000" /> <circle cx="112" cy="58" r="4" fill="#000" /> <!-- 笑容 --> <path d="M 85 72 Q 100 80 115 72" stroke="#000" stroke-width="3" fill="none" /> <!-- 手臂 --> <rect x="35" y="140" width="20" height="60" rx="10" fill="#FFDAB9" /> <rect x="145" y="140" width="20" height="60" rx="10" fill="#FFDAB9" /> <!-- 茶壺（左手拿著） --> <ellipse cx="30" cy="195" rx="15" ry="12" fill="#8B7355" /> <rect x="20" y="185" width="20" height="15" rx="3" fill="#A0826D" /> <path d="M 20 192 L 15 192 L 15 198 L 20 198" fill="#8B7355" /> <circle cx="30" cy="180" r="3" fill="#654321" /> <!-- 茶杯（右手拿著） --> <rect x="158" y="190" width="18" height="20" rx="2" fill="#FFF" stroke="#8B7355" stroke-width="2" /> <ellipse cx="167" cy="192" rx="9" ry="3" fill="#90EE90" /> <!-- 圍裙 --> <polygon points="70,140 130,140 135,250 65,250" fill="#FFF" opacity="0.7" stroke="#CCC" stroke-width="2" /> <!-- 腰帶 --> <rect x="55" y="140" width="90" height="8" fill="#8B4513" />
+      </svg>
+      <div class="waiter-dialogue">
+       「客官您好！小的是這客棧的店小二。看您這打扮  是要出遠門吧？不知客官尊姓大名？」
+      </div>
+     </div>
+     <div class="name-input-container"><input type="text" id="playerNameInput" class="name-input" placeholder="告訴店小二你的名字..." maxlength="10">
+      <div id="nameError" class="input-error"></div>
+      <div style="margin-top: 30px;"><button class="continue-btn" onclick="confirmName()">告訴店小二</button>
+      </div>
+     </div>
+    </div>
+   </div><!-- 場景3: 封面頁 -->
+   <div class="scene scene-cover active" id="sceneCover">
+    <div class="book-cover">
+     <h1 class="book-title" id="gameTitle">   詩遊唐</h1>
+     <div class="cover-illustration"><!-- 日落太陽 -->
+      <div class="cover-sun"></div><!-- 長江水面與倒影 -->
+      <div class="cover-river">
+       <div class="cover-river-shimmer"></div>
+      </div><!-- 黃鶴樓 SVG -->
+      <svg class="cover-tower" viewbox="0 0 200 260" xmlns="http://www.w3.org/2000/svg"><!-- 樓身第一層 --> <polygon points="45,220 155,220 145,180 55,180" fill="#8B4513" stroke="#654321" stroke-width="2" /> <!-- 樓身第二層 --> <polygon points="40,180 160,180 150,140 50,140" fill="#A0522D" stroke="#654321" stroke-width="2" /> <!-- 樓身第三層 --> <polygon points="35,140 165,140 155,100 45,100" fill="#8B4513" stroke="#654321" stroke-width="2" /> <!-- 屋頂第一層 --> <polygon points="25,100 175,100 185,75 15,75" fill="#CD5C5C" stroke="#8B3A3A" stroke-width="2" /> <!-- 屋頂第二層 --> <polygon points="20,75 180,75 190,50 10,50" fill="#DC143C" stroke="#8B3A3A" stroke-width="2" /> <!-- 屋頂第三層 --> <polygon points="15,50 185,50 195,25 5,25" fill="#CD5C5C" stroke="#8B3A3A" stroke-width="2" /> <!-- 塔尖 --> <polygon points="80,25 120,25 100,0" fill="#FFD700" stroke="#DAA520" stroke-width="2" /> <!-- 窗戶 --> <rect x="70" y="150" width="25" height="25" fill="#FFF8DC" stroke="#654321" stroke-width="2" /> <rect x="105" y="150" width="25" height="25" fill="#FFF8DC" stroke="#654321" stroke-width="2" /> <rect x="75" y="110" width="20" height="20" fill="#FFF8DC" stroke="#654321" stroke-width="2" /> <rect x="105" y="110" width="20" height="20" fill="#FFF8DC" stroke="#654321" stroke-width="2" />
+      </svg><!-- 穿越者少女少年在畫面中   -->
+      <div class="cover-travelers"><!-- 少女 -->
+       <svg class="cover-traveler" viewbox="0 0 120 160" xmlns="http://www.w3.org/2000/svg"><!-- 裙   --> <ellipse cx="60" cy="140" rx="35" ry="20" fill="#FFB6C1" /> <!-- 身體 --> <rect x="35" y="75" width="50" height="65" rx="10" fill="#FFC0CB" /> <!-- 頭部 --> <circle cx="60" cy="40" r="25" fill="#FFE4C4" /> <!-- 頭髮 --> <path d="M 35 40 Q 35 15 60 12 Q 85 15 85 40 L 80 48 Q 60 30 40 48 Z" fill="#2C1810" /> <!-- 眼睛 --> <circle cx="50" cy="40" r="4" fill="#000" /> <circle cx="70" cy="40" r="4" fill="#000" /> <!-- 微笑 --> <path d="M 48 50 Q 60 56 72 50" stroke="#000" stroke-width="2" fill="none" /> <!-- 手臂 --> <rect x="22" y="80" width="12" height="40" rx="6" fill="#FFDAB9" /> <rect x="86" y="80" width="12" height="40" rx="6" fill="#FFDAB9" /> <!-- 書卷 --> <rect x="16" y="110" width="22" height="30" rx="3" fill="#F5DEB3" stroke="#8B6914" stroke-width="2" /> <line x1="20" y1="120" x2="34" y2="120" stroke="#8B6914" stroke-width="1" /> <line x1="20" y1="125" x2="34" y2="125" stroke="#8B6914" stroke-width="1" />
+       </svg><!-- 少年 -->
+       <svg class="cover-traveler" viewbox="0 0 120 160" xmlns="http://www.w3.org/2000/svg"><!-- 腳部 --> <ellipse cx="60" cy="140" rx="35" ry="20" fill="#87CEEB" /> <!-- 身體 --> <rect x="35" y="75" width="50" height="65" rx="10" fill="#87CEFA" /> <!-- 頭部 --> <circle cx="60" cy="40" r="25" fill="#FFE4C4" /> <!-- 頭髮 --> <path d="M 38 35 Q 40 18 60 15 Q 80 18 82 35 L 78 42 Q 60 25 42 42 Z" fill="#2C1810" /> <!-- 眼睛 --> <circle cx="50" cy="40" r="4" fill="#000" /> <circle cx="70" cy="40" r="4" fill="#000" /> <!-- 微笑 --> <path d="M 48 50 Q 60 56 72 50" stroke="#000" stroke-width="2" fill="none" /> <!-- 手臂 --> <rect x="22" y="80" width="12" height="40" rx="6" fill="#FFDAB9" /> <rect x="86" y="80" width="12" height="40" rx="6" fill="#FFDAB9" /> <!--   子 --> <path d="M 90 105 Q 105 95 105 115 Q 105 95 90 125 Z" fill="#FFF" stroke="#000" stroke-width="2" /> <line x1="90" y1="105" x2="90" y2="125" stroke="#000" stroke-width="2" />
+       </svg>
+      </div><!-- 飛舞的書卷 -->
+      <div class="cover-scrolls">
+       <svg class="cover-scroll" width="70" height="40" viewbox="0 0 70 40" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="60" height="30" rx="4" fill="#F5DEB3" stroke="#8B6914" stroke-width="2" /> <line x1="10" y1="15" x2="60" y2="15" stroke="#8B6914" stroke-width="1" /> <line x1="10" y1="20" x2="55" y2="20" stroke="#8B6914" stroke-width="1" /> <line x1="10" y1="25" x2="50" y2="25" stroke="#8B6914" stroke-width="1" />
+       </svg>
+       <svg class="cover-scroll" width="70" height="40" viewbox="0 0 70 40" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="60" height="30" rx="4" fill="#F5DEB3" stroke="#8B6914" stroke-width="2" /> <line x1="10" y1="15" x2="60" y2="15" stroke="#8B6914" stroke-width="1" /> <line x1="10" y1="20" x2="55" y2="20" stroke="#8B6914" stroke-width="1" /> <line x1="10" y1="25" x2="50" y2="25" stroke="#8B6914" stroke-width="1" />
+       </svg>
+       <svg class="cover-scroll" width="70" height="40" viewbox="0 0 70 40" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="60" height="30" rx="4" fill="#F5DEB3" stroke="#8B6914" stroke-width="2" /> <line x1="10" y1="15" x2="60" y2="15" stroke="#8B6914" stroke-width="1" /> <line x1="10" y1="20" x2="55" y2="20" stroke="#8B6914" stroke-width="1" /> <line x1="10" y1="25" x2="50" y2="25" stroke="#8B6914" stroke-width="1" />
+       </svg>
+       <svg class="cover-scroll" width="70" height="40" viewbox="0 0 70 40" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="60" height="30" rx="4" fill="#F5DEB3" stroke="#8B6914" stroke-width="2" /> <line x1="10" y1="15" x2="60" y2="15" stroke="#8B6914" stroke-width="1" /> <line x1="10" y1="20" x2="55" y2="20" stroke="#8B6914" stroke-width="1" /> <line x1="10" y1="25" x2="50" y2="25" stroke="#8B6914" stroke-width="1" />
+       </svg>
+      </div>
+     </div>
+    </div>
+    <div class="menu-buttons"><button class="menu-btn" onclick="startNewGame()">開始遊戲</button> <button class="menu-btn secondary" onclick="openLoadModal()">讀取存檔</button>
+    </div>
+   </div><!-- 場景4: 大唐十道地圖 -->
+   <div class="scene map-scene" id="sceneRegionMap">
+    <div class="map-container">
+     <h2 class="map-title">大唐十道</h2>
+     <svg class="map-svg" viewbox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="1200" height="800" fill="rgba(245, 235, 220, 0.2)" /> <path d="M 200 320 Q 280 290 360 310 Q 440 330 520 300 Q 600 270 680 295" fill="rgba(139, 90, 60, 0.5)" stroke="rgba(100, 60, 40, 0.6)" stroke-width="1" /> <path d="M 150 250 Q 300 240 450 255 Q 600 270 750 260" fill="none" stroke="rgba(100, 180, 200, 0.7)" stroke-width="3" /> <path d="M 100 520 Q 300 515 500 530 Q 700 545 900 535" fill="none" stroke="rgba(100, 180, 200, 0.7)" stroke-width="3" /> <g class="location-marker" onclick="enterRegion('guannei')">
+       <circle cx="350" cy="280" r="32" />
+       <text x="350" y="290">
+        關內
+       </text>
+      </g> <g class="location-marker" onclick="enterRegion('hebei')">
+       <circle cx="620" cy="200" r="32" />
+       <text x="620" y="210">
+        河北
+       </text>
+      </g> <g class="location-marker" onclick="enterRegion('hedong')">
+       <circle cx="480" cy="240" r="32" />
+       <text x="480" y="250">
+        河東
+       </text>
+      </g> <g class="location-marker" onclick="enterRegion('henan')">
+       <circle cx="550" cy="360" r="32" />
+       <text x="550" y="370">
+        河南
+       </text>
+      </g> <g class="location-marker" onclick="enterRegion('shannan')">
+       <circle cx="500" cy="480" r="32" />
+       <text x="500" y="490">
+        山南
+       </text>
+      </g> <g class="location-marker" onclick="enterRegion('huainan')">
+       <circle cx="680" cy="430" r="32" />
+       <text x="680" y="440">
+        淮南
+       </text>
+      </g> <g class="location-marker" onclick="enterRegion('jiangnan')">
+       <circle cx="820" cy="540" r="32" />
+       <text x="820" y="550">
+        江南
+       </text>
+      </g> <g class="location-marker" onclick="enterRegion('jiannan')">
+       <circle cx="280" cy="480" r="32" />
+       <text x="280" y="490">
+        劍南
+       </text>
+      </g> <g class="location-marker" onclick="enterRegion('longright')">
+       <circle cx="200" cy="300" r="32" />
+       <text x="200" y="310">
+           右
+       </text>
+      </g> <g class="location-marker" onclick="enterRegion('lingnan')">
+       <circle cx="700" cy="680" r="32" />
+       <text x="700" y="690">
+        嶺南
+       </text>
+      </g>
+     </svg>
+    </div>
+   </div><!-- 場景5: 城市選擇 -->
+   <div class="scene map-scene" id="sceneCitySelect">
+    <div class="city-select-container">
+     <h2 class="region-name" id="currentRegionName">關內道</h2>
+     <div class="city-select-grid" id="citySelectGrid"></div>
+     <div style="text-align: center; margin-top: 40px;"><button class="continue-btn" onclick="backToRegionMap()">返回十道地圖</button>
+     </div>
+    </div>
+   </div><!-- 場景6: 城市地圖 -->
+   <div class="scene map-scene" id="sceneCityMap">
+    <div class="city-map-container">
+     <div class="city-map-header">
+      <h2 class="city-name" id="currentCityName">長安</h2>
+     </div>
+     <div class="city-locations" id="cityLocations"></div>
+     <div style="text-align: center; margin-top: 40px;"><button class="continue-btn" onclick="backToCitySelect()">返回城市選擇</button>
+     </div>
+    </div>
+   </div><!-- 場景7: 街市場景 -->
+   <div class="scene market-scene" id="sceneMarket">
+    <div class="market-container">
+     <h2 class="market-title" id="marketTitle">街市</h2>
+     <div class="market-shops" id="marketShops"></div>
+     <div style="text-align: center; margin-top: 40px;"><button class="continue-btn" onclick="backToCityMap()">返回城市</button>
+     </div>
+    </div>
+   </div><!-- 場景8: 商店場景 -->
+   <div class="scene shop-scene" id="sceneShop">
+    <div class="shop-container" id="shopContainer"></div>
+   </div><!-- 場景9: 詩詞互動場景 -->
+   <div class="scene poetry-scene" id="scenePoetry">
+    <div class="poetry-container" id="poetryContainer"></div>
+   </div><!-- 場景10: 白幕詩詞   示 -->
+   <div class="scene poetry-reveal-scene" id="scenePoetryReveal">
+    <div class="poetry-reveal-container" id="poetryRevealContainer"></div>
+   </div><!-- 場景11: 皇   內部（含華   池） -->
+   <div class="scene map-scene" id="scenePalace">
+    <div class="city-map-container">
+     <div class="city-map-header">
+      <h2 class="city-name">大明宮</h2>
+     </div>
+     <div class="city-locations" id="palaceLocations"></div>
+     <div style="text-align: center; margin-top: 40px;"><button class="continue-btn" onclick="backToCityMapFromPalace()">返回長安</button>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = { game_title: "踏詩遊唐" };
+
+    let gameState = {
+      playerName: '',
+      money: 100,
+      season: 'spring',
+      day: 1,
+      actionPoints: 5,
+      maxActionPoints: 5,
+      currentRegion: '',
+      currentCity: '',
+      bridgeSleepCount: 0,
+      inventory: [],
+      mainQuests: [
+        { id: 'q1', text: '探索大唐各道城市', progress: 0, target: 5, completed: false },
+        { id: 'q2', text: '收集詩  ', progress: 0, target: 10, completed: false },
+        { id: 'q3', text: '結交李白', completed: false }
+      ],
+      sideQuests: [
+        { id: 's1', text: '與胡姬對話', completed: false },
+        { id: 's2', text: '購買一套華服', completed: false },
+        { id: 's3', text: '品嚐各地美食', progress: 0, target: 3, completed: false }
+      ],
+      visitedPoetry: [],
+      completedPoetry: [],
+      completedEvents: [],
+      merchantInvestments: [],
+      visitedCities: []
+    };
+
+    let allSaveRecords = [];
+    let currentPoetryKey = null;
+    let currentPoetryStage = 1;
+    let currentShopType = '';
+
+    const seasons = ['spring', 'summer', 'autumn', 'winter'];
+    const seasonNames = { spring: '春季', summer: '夏季', autumn: '秋季', winter: '冬季' };
+
+    // 區域與城市資料
+    const regionData = {
+      guannei: {
+        name: '關內道',
+        cities: {
+          changan: {
+            name: '長安',
+            hasMarket: true,
+            attractions: ['曲江池', '芙蓉園'],
+            hasPalace: true,
+            bridge: true,
+            priceMultiplier: 1.3
+          },
+          luoyang: {
+            name: '洛陽',
+            hasMarket: true,
+            attractions: ['白馬寺', '龍門石窟', '牡丹園'],
+            bridge: true,
+            priceMultiplier: 1.2
+          }
+        }
+      },
+      hebei: {
+        name: '河北道',
+        cities: {
+          youzhou: {
+            name: '幽州',
+            hasMarket: true,
+            attractions: ['幽州台', '胡人酒肆', '燕山'],
+            bridge: true,
+            priceMultiplier: 0.9
+          }
+        }
+      },
+      hedong: {
+        name: '河東道',
+        cities: {
+          taiyuan: {
+            name: '太原',
+            hasMarket: true,
+            attractions: ['晉祠', '天龍山'],
+            bridge: true,
+            priceMultiplier: 1.0
+          }
+        }
+      },
+      henan: {
+        name: '河南道',
+        cities: {
+          mengjin: {
+            name: '孟津',
+            hasMarket: true,
+            attractions: ['黃河  口', '龍門山'],
+            bridge: true,
+            priceMultiplier: 1.0
+          },
+          xingyang: {
+            name: '滎陽',
+            hasMarket: true,
+            attractions: ['虎牢關', '  澤'],
+            bridge: true,
+            priceMultiplier: 1.0
+          },
+          yanshi: {
+            name: '   師',
+            hasMarket: true,
+            attractions: ['二里頭', '玄奘故里'],
+            bridge: true,
+            priceMultiplier: 1.0
+          }
+        }
+      },
+      shannan: {
+        name: '山南道',
+        cities: {
+          xiangyang: {
+            name: '襄陽',
+            hasMarket: true,
+            attractions: ['襄陽城', '隆中'],
+            bridge: true,
+            priceMultiplier: 1.0
+          }
+        }
+      },
+      huainan: {
+        name: '淮南道',
+        cities: {
+          yangzhou: {
+            name: '揚州',
+            hasMarket: true,
+            attractions: ['瘦西湖', '   十四橋', '大明寺'],
+            bridge: true,
+            priceMultiplier: 1.2
+          }
+        }
+      },
+      jiangnan: {
+        name: '江南道',
+        cities: {
+          suzhou: {
+            name: '蘇州',
+            hasMarket: true,
+            attractions: ['寒山寺', '虎丘', '拙政園'],
+            bridge: true,
+            priceMultiplier: 1.2
+          }
+        }
+      },
+      jiannan: {
+        name: '劍南道',
+        cities: {
+          chengdu: {
+            name: '成都',
+            hasMarket: true,
+            attractions: ['杜甫草堂', '武侯祠', '青城山'],
+            bridge: true,
+            priceMultiplier: 1.1
+          }
+        }
+      },
+      longright: {
+        name: '隴右道',
+        cities: {
+          liangzhou: {
+            name: '涼州',
+            hasMarket: true,
+            attractions: ['葡萄園', '沙漠綠洲'],
+            bridge: true,
+            priceMultiplier: 0.8
+          }
+        }
+      },
+      lingnan: {
+        name: '嶺南道',
+        cities: {
+          guangzhou: {
+            name: '廣州',
+            hasMarket: true,
+            attractions: ['珠江', '光孝寺'],
+            bridge: true,
+            priceMultiplier: 1.3
+          }
+        }
+      }
+    };
+
+    // 詩詞資料庫
+    const poetryData = {
+      changan_poverty: {
+        location: '長安街頭',
+        cost: 0,
+        requiredCondition: () => gameState.money < 30,
+        stage1: {
+          description: '你身上所剩銀兩無幾，   長安街頭徘徊。恰逢安史之亂後，     蕭瑟，往日繁華不再。你看見一位白髮老  ，正對著殘破的宮闕落淚……',
+          choices: [
+            { text: '👀 上  詢問', action: 'ask' },
+            { text: '💭 默默觀察', action: 'observe' }
+          ]
+        },
+        stage2: {
+          ask: '老者見你衣衫襤褸，嘆息道：「年輕人，你也是戰亂中的流民嗎？曾經的長安啊，如今只剩破敗……」他指向遠處的殘垣斷壁，眼中滿是哀傷。',
+          observe: '你看著老者，他的眼淚滴落在塵土上。突然，一位中年文士走來，正是詩聖杜甫。他看著這片山河，低聲吟誦……'
+        },
+        stage3: {
+          title: '春望',
+          author: '杜甫',
+          verses: [
+            '國破山河在',
+            '城春草木深',
+            '感時花     ',
+            '恨別鳥驚心'
+          ]
+        },
+        stage4: {
+          description: '杜甫吟   詩，看向你：「年輕人，即   在亂世中，也不要放棄希望。」他從懷中掏出些許銀兩，遞給你：「拿著吧，希望你能看到山河重  的那一天。」',
+          choices: [
+            { text: '   拜謝杜甫', reward: { money: 50, quest: 'poetry' } }
+          ]
+        }
+      },
+      changan_palace: {
+        location: '大明宮',
+        cost: 1,
+        requiredEvent: 'met_libai',
+        stage1: {
+          description: '多虧李白引薦，你得以進入大明宮。正值牡丹花盛開，玄宗皇帝攜楊貴妃在沉香亭賞花。李白醉眼惺忪，被召上來賦詩……',
+          choices: [
+            { text: '👀 觀看李白賦詩', action: 'watch' },
+            { text: '💭 暗中觀察貴妃', action: 'observe' }
+          ]
+        },
+        stage2: {
+          watch: '李白大步上   ，絲毫不懼天威。玄宗笑道：「李卿，今日為朕賦詩助興！」李白提筆疾書，筆走龍蛇……',
+          observe: '楊貴妃嬌羞地看   滿園牡丹，國  天香。玄宗目光溫柔，李白見此  景，靈感湧現……'
+        },
+        stage3: {
+          title: '清平調·其一',
+          author: '李白',
+          verses: [
+            '雲想衣裳花想容',
+            '春風拂檻露華濃',
+            '若非群玉山頭見',
+            '會向瑤台月下   '
+          ]
+        },
+        stage4: {
+          description: '詩畢，滿   喝彩。楊貴妃嫣然一笑，玄宗大悅，當場賞賜千金。李白醉眼看向你，舉杯道：「今日與君同遊，不枉此生！」',
+          choices: [
+            { text: '🍷 與李白共飲', reward: { money: 100, quest: 'poetry' } }
+          ]
+        }
+      },
+      changan_huaqingchi: {
+        location: '華清池',
+        cost: 1,
+        requiredEvent: 'met_libai',
+        stage1: {
+          description: '你隨李白來到驪山腳下的華清池，溫泉氤氳繚繞。這裡是皇家行宮，李白引你入內。你看見池畔   丹盛開，恍如仙境……',
+          choices: [
+            { text: '🎵 聆聽李白詩話', action: 'listen' },
+            { text: '♨️ 走向溫泉', action: 'spring' }
+          ]
+        },
+        stage2: {
+          listen: '李白醉眼惺忪：「當年玄宗與貴妃在此    奉詔賦詩，那可是千古佳話啊  」他提筆寫下當年的詩   ……',
+          spring: '你走向溫泉，煙霧中  乎還能看   當年的身影。李白在你身邊  吟起舊作……'
+        },
+        stage3: {
+          title: '清平調·其二',
+          author: '李白',
+          verses: [
+            '一枝紅艷露凝香',
+            '雲雨巫山枉斷腸',
+            '借問漢宮誰得似',
+            '可  飛燕倚新妝'
+          ]
+        },
+        stage4: {
+          description: '詩境中那盛世風華令你   往不已。李白拍著你的肩膀：「盛世已逝，但詩意永存。來，我們繼續遊歷天下！」',
+          choices: [
+            { text: '📜 記錄詩作', reward: { money: 30, quest: 'poetry' } }
+          ]
+        }
+      },
+      changan_qujiangchi: {
+        location: '曲江池',
+        cost: 1,
+        stage1: {
+          description: '你來到長安著名的曲江池，湖光山色美不勝收。春日裡，文人雅士聚集於此，詩酒流連。     見一群士子正在湖畔吟詩作對……',
+          choices: [
+            { text: '📜 上前觀賞', action: 'watch' },
+            { text: '🚶 獨自漫步', action: 'walk' }
+          ]
+        },
+        stage2: {
+          watch: '一位青年才俊正在吟詩，他的詩句清新脫俗。旁人贊嘆不已：「此乃杜牧杜公子之佳作！」',
+          walk: '你  著湖畔漫步，春風拂  。突然聽見有人吟誦杜牧的詩作……'
+        },
+        stage3: {
+          title: '清明',
+          author: '杜牧',
+          verses: [
+            '清明時節雨紛   ',
+            '路上行人欲斷魂',
+            '借問酒家何處有',
+            '牧童遙指杏花村'
+          ]
+        },
+        stage4: {
+          description: '詩中那份清新與惆悵讓你深有感觸。春日的曲江池，   證了多少文人的   情與浪漫……',
+          choices: [
+            { text: '📜 記錄此景', reward: { money: 25, quest: 'poetry' } }
+          ]
+        }
+      },
+      youzhou_jiulv: {
+        location: '胡人酒肆',
+        cost: 1,
+        stage1: {
+          description: '幽州邊塞之地，胡漢雜處。你走進一家胡人酒肆，碧眼金髮的胡姬正在起舞，銀鈴般的笑聲迴盪……',
+          choices: [
+            { text: '🍷 點一壺酒', action: 'drink' },
+            { text: '💃 觀   舞蹈', action: 'dance' }
+          ]
+        },
+        stage2: {
+          drink: '你點了葡萄酒，胡姬笑著為你斟  。她的漢語雖帶口音，卻別有風情。角落裡有  少年郎，正凝視著她……',
+          dance: '胡姬舞姿曼妙，異域風情濃郁。你注意到一位白衣少年，目不轉睛地看著她，眼中滿是愛慕……'
+        },
+        stage3: {
+          title: '少年行',
+          author: '  白',
+          verses: [
+            '五陵年少金市   ',
+            '銀鞍白馬度春風',
+            '落花踏盡遊何處',
+            '笑入胡姬酒肆中'
+          ]
+        },
+        stage4: {
+          description: '少年郎大笑，舉杯邀你共飲。胡姬也笑著加入。這一刻，你深深感受到大唐的開放與包  ……',
+          choices: [
+            { text: '💬 與胡姬交談', reward: { money: 25, quest: 's1' } },
+            { text: '🚶 離開酒肆', reward: { money: 15, quest: 'poetry' } }
+          ]
+        }
+      },
+      yangzhou_bridge: {
+        location: '二十四橋',
+        cost: 1,
+        stage1: {
+          description: '揚州明月夜，你來到著名的二十四橋。月色如水，橋影婆娑。遠處傳來悠揚的簫聲……',
+          choices: [
+            { text: '🎵 循聲尋找', action: 'find' },
+            { text: '🌙 獨自賞月', action: 'moon' }
+          ]
+        },
+        stage2: {
+          find: '你走近橋頭，看見一位白衣女子   在吹簫。曲終，她輕嘆一聲  似有心事……',
+          moon: '你倚在橋欄上賞月，突然聽見有人吟詩，那聲音充滿懷念……'
+        },
+        stage3: {
+          title: '寄揚州韓綽判官',
+          author: '杜牧',
+          verses: [
+            '青  隱隱水迢迢',
+            '秋盡江南草未凋',
+            '二十四橋明月夜',
+            '玉人何處教吹簫'
+          ]
+        },
+        stage4: {
+          description: '詩中那份懷念與惆悵，   你想起了遠方的故鄉。月光下，你默默記下這一刻……',
+          choices: [
+            { text: '📜 記錄此景', reward: { money: 30, quest: 'poetry' } }
+          ]
+        }
+      },
+      chengdu_caotang: {
+        location: '杜甫草堂',
+        cost: 1,
+        stage1: {
+          description: '你來到成都郊外的杜甫草堂。這座簡陋的茅屋，曾是詩聖避難之所。秋風蕭瑟，屋頂茅草被吹得七零八落……',
+          choices: [
+            { text: '🏠 進入草堂', action: 'enter' },
+            { text: '🍂 在   觀察', action: 'watch' }
+          ]
+        },
+        stage2: {
+          enter: '   堂內簡陋異常，但你看見牆上掛著許多詩稿。管理者告訴你，杜甫在此寫下許多名篇……',
+          watch: '突然一陣狂風吹來，屋頂的茅草紛紛飛舞。你彷彿看見當年杜甫追趕茅草的身影，心中感慨萬千……'
+        },
+        stage3: {
+          title: '茅屋為  風所破歌',
+          author: '杜甫',
+          verses: [
+            '八月秋高風怒號',
+            '卷我屋上三重茅',
+            '安得廣廈千萬間',
+            '大庇天下寒士俱歡顏'
+          ]
+        },
+        stage4: {
+          description: '「大庇天下寒士俱歡顏」——即使自己居無定所，杜甫仍心繫天下。你被這種胸懷深深打動……',
+          choices: [
+            { text: '🙏 祭拜詩聖', reward: { money: 35, quest: 'poetry' } }
+          ]
+        }
+      }
+    };
+
+    // 街市統一商店配置
+    const marketShops = [
+      { name: '成  鋪', icon: '👘' },
+      { name: '小吃   ', icon: '🍜' },
+      { name: '當鋪', icon: '🏦' },
+      { name: '客棧', icon: '🏨' },
+      { name: '首飾鋪', icon: '💎' },
+      { name: '果蔬攤', icon: '🥬' },
+      { name: '書店', icon: '📚' },
+      { name: '雜糧鋪', icon: '🌾' },
+      { name: '鐵鋪', icon: '⚒️' }
+    ];
+
+    // 商店商品資料
+    const shopData = {
+      '成衣鋪': {
+        description: '「客官裡   請！小   專營各式成衣，從棉   到錦綢應有盡有。您想看點什麼？」',
+        items: [
+          { id: 'cloth1', name: '棉布衣', icon: '👘', basePrice: 15, desc: '尋常百姓穿著' },
+          { id: 'cloth2', name: '絲綢袍', icon: '🥻', basePrice: 50, desc: '富戶人家喜愛' },
+          { id: 'cloth3', name: '錦繡華服', icon: '👗', basePrice: 120, desc: '官宦名人   屬', quest: 's2', triggerLibai: true }
+        ]
+      },
+      '首飾鋪': {
+        description: '「歡迎光臨！小店的首飾都是上等貨色，金銀玉石樣樣齊全。姑娘看中哪件？」',
+        items: [
+          { id: 'jewelry1', name: '銀  ', icon: '📌', basePrice: 30, desc: '純銀打造' },
+          { id: 'jewelry2', name: '玉佩', icon: '💎', basePrice: 80, desc: '和田美玉' },
+          { id: 'jewelry3', name: '金釵', icon: '👑', basePrice: 150, desc: '赤金鑲寶' }
+        ]
+      },
+      '小吃攤': {
+        description: '「來來來  熱騰騰的小吃，保證好吃  客官想嚐點什麼？」',
+        items: [
+          { id: 'food1', name: '胡餅', icon: '🥙', basePrice: 5, desc: '芝麻香脆', quest: 's3' },
+          { id: 'food2', name: '羊肉泡饃', icon: '  ', basePrice: 8, desc: '  濃肉爛', quest: 's3' },
+          { id: 'food3', name: '櫻桃煎', icon: '🍡', basePrice: 12, desc: '宮廷  心', quest: 's3' }
+        ]
+      },
+      '當鋪': {
+        description: '「本店收購各類物品，價格公道童叟無欺！」',
+        items: []
+      },
+      '客棧': {
+        description: '「歡迎入住！上等客房，乾淨舒適，一晚只需十  銀子。」',
+        items: [
+          { id: 'inn1', name: '住宿一晚', icon: '🛏️', basePrice: 10, desc: '恢復   力' }
+        ]
+      },
+      '果蔬攤': {
+        description: '「新鮮果蔬！剛從地裡摘  ，水靈著呢！」',
+        items: [
+          { id: 'fruit1', name: '時令鮮果', icon: '🍑', basePrice: 3, desc: '當季水果' },
+          { id: 'veg1', name: '新鮮蔬菜', icon: '🥬', basePrice: 2, desc: '翠綠欲滴' }
+        ]
+      },
+      '書店': {
+        description: '「   店專賣各類書籍，  史子集、詩   歌賦應有盡有！」',
+        items: [
+          { id: 'book1', name: '詩詞   集', icon: '📖', basePrice: 20, desc: '唐詩精選' },
+          { id: 'book2', name: '遊記雜談', icon: '📚', basePrice: 15, desc: '各地風土' }
+        ]
+      },
+      '雜糧鋪': {
+        description: '「五穀雜糧，米麵油鹽，家中必備！」',
+        items: [
+          { id: 'grain1', name: '白米', icon: '🍚', basePrice: 5, desc: '上等好米' },
+          { id: 'grain2', name: '麵粉', icon: '🌾', basePrice: 4, desc: '新磨麵粉' }
+        ]
+      },
+      '鐵鋪': {
+        description: '「鐵器農具、刀劍兵器，樣樣精良！」',
+        items: [
+          { id: 'iron1', name: '短刀', icon: '🔪', basePrice: 30, desc: '防身  用' },
+          { id: 'iron2', name: '農具', icon: '⚒️', basePrice: 15, desc: '耕種必備' }
+        ]
+      }
+    };
+
+    // Data SDK 處理
+    const dataHandler = {
+      onDataChanged(data) {
+        allSaveRecords = data;
+      }
+    };
+
+    async function initSDK() {
+      if (window.dataSdk) {
+        const result = await window.dataSdk.init(dataHandler);
+        if (!result.isOk) {
+          console.error('Data SDK 初始化失敗');
+        }
+      }
+
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange: async (config) => {
+            document.getElementById('gameTitle').textContent = config.game_title || defaultConfig.game_title;
+          },
+          mapToCapabilities: () => ({
+            recolorables: [],
+            borderables: [],
+            fontEditable: undefined,
+            fontSizeable: undefined
+          }),
+          mapToEditPanelValues: (config) => new Map([
+            ['game_title', config.game_title || defaultConfig.game_title]
+          ])
+        });
+      }
+    }
+
+    function showNarration(text) {
+      const existing = document.querySelector('.narration');
+      if (existing) existing.remove();
+      
+      const narration = document.createElement('div');
+      narration.className = 'narration';
+      narration.textContent = text;
+      document.body.appendChild(narration);
+      setTimeout(() => narration.remove(), 4000);
+    }
+
+    function updateUI() {
+      const xun = gameState.day <= 10 ? '上旬' : gameState.day <= 20 ? '中旬' : '下旬';
+      document.getElementById('seasonDisplay').textContent = `${seasonNames[gameState.season]} ${xun}`;
+      document.getElementById('actionDisplay').textContent = `行動點: ${gameState.actionPoints}/${gameState.maxActionPoints}`;
+      document.getElementById('moneyDisplay').textContent = `💰 ${gameState.money}兩`;
+      document.getElementById('modalMoneyDisplay').textContent = gameState.money;
+      
+      updateBackground();
+      updateQuests();
+    }
+
+    function updateBackground() {
+      const container = document.getElementById('gameContainer');
+      if (gameState.actionPoints >= 4) {
+        container.style.background = 'linear-gradient(135deg, #87CEEB 0%, #E6E6FA 50%, #DEB887 100%)';
+      } else if (gameState.actionPoints >= 2) {
+        container.style.background = 'linear-gradient(135deg, #FF7F50 0%, #FF6B9D 50%, #FFA07A 100%)';
+      } else {
+        container.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)';
+      }
+    }
+
+    function updateQuests() {
+      const mainHTML = gameState.mainQuests.map(q => {
+        const progressText = q.target ? ` (${q.progress}/${q.target})` : '';
+        return `<div class="quest-item ${q.completed ? 'completed' : ''}">
+          ${q.text}${progressText}
+          ${q.completed ? '<div style="color: #4caf50; margin-top: 5px;">✓ 已完成</div>' : ''}
+        </div>`;
+      }).join('');
+      document.getElementById('mainQuestList').innerHTML = mainHTML;
+
+      const sideHTML = gameState.sideQuests.map(q => {
+        const progressText = q.target ? ` (${q.progress}/${q.target})` : '';
+        return `<div class="quest-item ${q.completed ? 'completed' : ''}">
+          ${q.text}${progressText}
+          ${q.completed ? '<div style="color: #4caf50; margin-top: 5px;">✓ 已完成</div>' : ''}
+        </div>`;
+      }).join('');
+      document.getElementById('sideQuestList').innerHTML = sideHTML;
+    }
+
+    function toggleQuestSection(type) {
+      const list = document.getElementById(type + 'QuestList');
+      const toggle = document.getElementById(type + 'Toggle');
+      if (list.classList.contains('expanded')) {
+        list.classList.remove('expanded');
+        toggle.textContent = '▼';
+      } else {
+        list.classList.add('expanded');
+        toggle.textContent = '▲';
+      }
+    }
+
+    function consumeActionPoint() {
+      gameState.actionPoints--;
+      if (gameState.actionPoints <= 0) {
+        gameState.actionPoints = gameState.maxActionPoints;
+        gameState.day++;
+        
+        if (gameState.day > 30) {
+          gameState.day = 1;
+          const currentIndex = seasons.indexOf(gameState.season);
+          gameState.season = seasons[(currentIndex + 1) % 4];
+          showNarration(`季節  替，現在是${seasonNames[gameState.season]}了`);
+        }
+      }
+      updateUI();
+    }
+
+    function switchScene(from, to) {
+      const fromScene = document.getElementById(from);
+      const toScene = document.getElementById(to);
+      
+      if (fromScene) {
+        fromScene.classList.remove('active');
+      }
+      
+      setTimeout(() => {
+        if (toScene) {
+          toScene.classList.add('active');
+        }
+      }, 100);
+    }
+
+    function goToNaming() {
+      switchScene('sceneOpening', 'sceneNaming');
+    }
+
+    function confirmName() {
+      const nameInput = document.getElementById('playerNameInput');
+      const name = nameInput.value.trim();
+      const errorDiv = document.getElementById('nameError');
+      
+      if (!name) {
+        errorDiv.textContent = '請輸入你的姓名！';
+        return;
+      }
+      
+      if (name.length > 10) {
+        errorDiv.textContent = '姓名不可  過10個字！';
+        return;
+      }
+      
+      gameState.playerName = name;
+      document.getElementById('gameUI').style.display = 'block';
+      updateUI();
+      switchScene('sceneNaming', 'sceneRegionMap');
+      showNarration(`店小二笑道：「${name}客官好名字！祝您一路平安！」`);
+    }
+
+    function startNewGame() {
+      // 隱藏封面，顯示開場劇情
+      const cover = document.getElementById('sceneCover');
+      const opening = document.getElementById('sceneOpening');
+      
+      if (cover) cover.classList.remove('active');
+      
+      setTimeout(() => {
+        if (opening) opening.classList.add('active');
+      }, 100);
+    }
+
+    function enterRegion(regionKey) {
+      const region = regionData[regionKey];
+      if (!region) {
+        showNarration('此道路尚未開通，請稍後再來！');
+        return;
+      }
+
+      gameState.currentRegion = regionKey;
+      document.getElementById('currentRegionName').textContent = region.name;
+
+      const cities = region.cities;
+      let cityHTML = '';
+      
+      Object.keys(cities).forEach(cityKey => {
+        const city = cities[cityKey];
+        cityHTML += `
+          <div class="city-select-card" onclick="enterCity('${cityKey}')">
+            <div class="city-select-icon">🏛️</div>
+            <div class="city-select-name">${city.name}</div>
+          </div>
+        `;
+      });
+
+      document.getElementById('citySelectGrid').innerHTML = cityHTML;
+      switchScene('sceneRegionMap', 'sceneCitySelect');
+    }
+
+    function enterCity(cityKey) {
+      const region = regionData[gameState.currentRegion];
+      const city = region.cities[cityKey];
+      if (!city) return;
+
+      gameState.currentCity = cityKey;
+      
+      if (!gameState.visitedCities.includes(cityKey)) {
+        gameState.visitedCities.push(cityKey);
+        const quest = gameState.mainQuests.find(q => q.id === 'q1');
+        if (quest && !quest.completed) {
+          quest.progress++;
+          if (quest.progress >= quest.target) {
+            quest.completed = true;
+            showNarration('主線任務完成：探索大唐各道城市！');
+          }
+        }
+      }
+
+      if (cityKey === 'changan' && gameState.money < 30 && !gameState.completedPoetry.includes('changan_poverty')) {
+        startPoetryInteraction('changan_poverty');
+        return;
+      }
+
+      document.getElementById('currentCityName').textContent = city.name;
+
+      let locationsHTML = '';
+      
+      if (city.hasMarket) {
+        locationsHTML += `
+          <div class="location-card" onclick="enterMarket()">
+            <div class="location-icon">🏪</div>
+            <div class="location-label">街市</div>
+          </div>
+        `;
+      }
+
+      city.attractions.forEach(attr => {
+        locationsHTML += `
+          <div class="location-card" onclick="visitAttraction('${attr}')">
+            <div class="location-icon">🏛️</div>
+            <div class="location-label">${attr}</div>
+          </div>
+        `;
+      });
+
+      if (city.hasPalace) {
+        const hasLibai = gameState.completedEvents.includes('met_libai');
+        const lockedClass = hasLibai ? '' : 'locked';
+        const clickHandler = hasLibai ? `enterPalace()` : `cannotEnterPalace()`;
+        
+        locationsHTML += `
+          <div class="location-card ${lockedClass}" onclick="${clickHandler}">
+            <div class="location-icon">👑</div>
+            <div class="location-label">皇宮</div>
+            ${!hasLibai ? '<div class="location-note">需結交李白</div>' : ''}
+          </div>
+        `;
+      }
+
+      if (city.bridge) {
+        locationsHTML += `
+          <div class="location-card" onclick="sleepUnderBridge()">
+            <div class="location-icon">🌉</div>
+            <div class="location-label">橋下過夜</div>
+          </div>
+        `;
+      }
+
+      document.getElementById('cityLocations').innerHTML = locationsHTML;
+      switchScene('sceneCitySelect', 'sceneCityMap');
+      updateUI();
+    }
+
+    function cannotEnterPalace() {
+      showNarration('此處需要熟人引薦才能進入……在街市購買華服或許能遇到貴人');
+    }
+
+    function enterPalace() {
+      if (gameState.actionPoints <= 0) {
+        showNarration('今日行動點已用   ！');
+        return;
+      }
+
+      let palaceHTML = `
+        <div class="location-card" onclick="startPoetryInteraction('changan_palace')">
+          <div class="location-icon">👑</div>
+          <div class="location-label">大明宮</div>
+        </div>
+        <div class="location-card" onclick="startPoetryInteraction('changan_huaqingchi')">
+          <div class="location-icon">♨️</div>
+          <div class="location-label">華清池</div>
+        </div>
+      `;
+
+      document.getElementById('palaceLocations').innerHTML = palaceHTML;
+      switchScene('sceneCityMap', 'scenePalace');
+    }
+
+    function backToCityMapFromPalace() {
+      switchScene('scenePalace', 'sceneCityMap');
+    }
+
+    function enterMarket() {
+      const city = regionData[gameState.currentRegion].cities[gameState.currentCity];
+      document.getElementById('marketTitle').textContent = `${city.name} 街市`;
+
+      let shopsHTML = '';
+      marketShops.forEach(shop => {
+        shopsHTML += `
+          <div class="market-shop-card" onclick="enterShop('${shop.name}')">
+            <div class="location-icon">${shop.icon}</div>
+            <div class="location-label">${shop.name}</div>
+          </div>
+        `;
+      });
+
+      document.getElementById('marketShops').innerHTML = shopsHTML;
+      switchScene('sceneCityMap', 'sceneMarket');
+    }
+
+    function enterShop(shopName) {
+      if (gameState.actionPoints <= 0) {
+        showNarration('今日行動  已用盡！');
+        return;
+      }
+
+      currentShopType = shopName;
+
+      if (shopName === '當鋪') {
+        showPawnShop();
+        return;
+      }
+
+      if (shopName === '客棧') {
+        showInn();
+        return;
+      }
+
+      const shop = shopData[shopName];
+      if (!shop) {
+        showNarration('此店尚未開張，請稍後再來！');
+        return;
+      }
+
+      const city = regionData[gameState.currentRegion].cities[gameState.currentCity];
+      const multiplier = city.priceMultiplier;
+
+      let html = `
+        <h2 class="shop-title">${shopName}</h2>
+        <div class="shop-description">${shop.description}</div>
+        <div class="money-display">持有銀兩：<span id="shopMoneyDisplay">${gameState.money}</span> 兩</div>
+        <div class="shop-items">
+      `;
+
+      if (shop.items.length > 0) {
+        shop.items.forEach(item => {
+          const price = Math.round(item.basePrice * multiplier);
+          html += `
+            <div class="shop-item" onclick='buyItem(${JSON.stringify({...item, price})})'>
+              <div class="shop-item-icon">${item.icon}</div>
+              <div class="shop-item-name">${item.name}</div>
+              <div style="font-size: 1.1em; color: #b3e5d8; margin: 8px 0;">${item.desc}</div>
+              <div class="shop-item-price">${price} 兩</div>
+            </div>
+          `;
+        });
+      } else {
+        html += '<p style="color: #b3e5d8; text-align: center; grid-column: 1/-1;">暫無商品</p>';
+      }
+
+      html += `
+        </div>
+        <div style="text-align: center; margin-top: 30px;">
+          <button class="back-btn" onclick="backToMarket()">返回街市</button>
+        </div>
+      `;
+
+      document.getElementById('shopContainer').innerHTML = html;
+      switchScene('sceneMarket', 'sceneShop');
+    }
+
+    function showPawnShop() {
+      let html = `
+        <h2 class="shop-title">當鋪</h2>
+        <div class="shop-description">「本店收購各類物品，價格公道童叟無欺！」</div>
+        <div class="money-display">持有銀兩：<span id="shopMoneyDisplay">${gameState.money}</span> 兩</div>
+      `;
+
+      if (gameState.inventory.length === 0) {
+        html += '<p style="color: #b3e5d8; text-align: center; margin: 30px 0; font-size: 1.4em;">你身上沒有可以典當的物品</p>';
+      } else {
+        html += '<div class="shop-items">';
+        gameState.inventory.forEach((item, index) => {
+          html += `
+            <div class="shop-item" onclick="sellItem(${index})">
+              <div class="shop-item-icon">${item.icon}</div>
+              <div class="shop-item-name">${item.name}</div>
+              <div class="shop-item-price">賣出 ${item.value} 兩</div>
+            </div>
+          `;
+        });
+        html += '</div>';
+      }
+
+      html += `
+        <div style="text-align: center; margin-top: 30px;">
+          <button class="back-btn" onclick="backToMarket()">返回街市</button>
+        </div>
+      `;
+
+      document.getElementById('shopContainer').innerHTML = html;
+      switchScene('sceneMarket', 'sceneShop');
+    }
+
+    function sellItem(index) {
+      const item = gameState.inventory[index];
+      gameState.money += item.value;
+      gameState.inventory.splice(index, 1);
+      
+      showNarration(`賣出了${item.name}，獲得${item.value}兩銀子  `);
+      updateUI();
+      
+      setTimeout(() => {
+        showPawnShop();
+      }, 1500);
+    }
+
+    function showInn() {
+      let html = `
+        <h2 class="shop-title">客棧</h2>
+        <div class="shop-description">「歡迎入住！上等客房，乾淨舒適，一晚只需十兩銀子。住宿可恢復所有行動點！」</div>
+        <div class="money-display">持有銀兩：<span id="shopMoneyDisplay">${gameState.money}</span> 兩</div>
+        <div class="shop-items">
+          <div class="shop-item" onclick="stayAtInn()">
+            <div class="shop-item-icon">🛏️</div>
+            <div class="shop-item-name">住宿一晚</div>
+            <div style="font-size: 1.1em; color: #b3e5d8; margin: 8px 0;">恢復所有行動點</div>
+            <div class="shop-item-price">10 兩</div>
+          </div>
+        </div>
+        <div style="text-align: center; margin-top: 30px;">
+          <button class="back-btn" onclick="backToMarket()">返  街市</button>
+        </div>
+      `;
+
+      document.getElementById('shopContainer').innerHTML = html;
+      switchScene('sceneMarket', 'sceneShop');
+    }
+
+    function stayAtInn() {
+      if (gameState.money < 10) {
+        showNarration('銀兩不足！');
+        return;
+      }
+
+      gameState.money -= 10;
+      gameState.actionPoints = gameState.maxActionPoints;
+      gameState.day++;
+
+      if (gameState.day > 30) {
+        gameState.day = 1;
+        const currentIndex = seasons.indexOf(gameState.season);
+        gameState.season = seasons[(currentIndex + 1) % 4];
+        showNarration(`在客棧美美睡了一覺，   節更替，現在是${seasonNames[gameState.season]}了`);
+      } else {
+        showNarration('在客棧美美睡了一覺，精神煥發！');
+      }
+
+      updateUI();
+      setTimeout(() => {
+        backToMarket();
+      }, 2000);
+    }
+
+    function buyItem(item) {
+      if (gameState.money < item.price) {
+        showNarration('銀   不足！');
+        return;
+      }
+
+      gameState.money -= item.price;
+      gameState.inventory.push({ id: item.id, name: item.name, icon: item.icon, value: Math.round(item.price * 0.6) });
+      
+      if (item.triggerLibai && !gameState.completedEvents.includes('met_libai')) {
+        gameState.completedEvents.push('met_libai');
+        const quest = gameState.mainQuests.find(q => q.id === 'q3');
+        if (quest) quest.completed = true;
+        showNarration('你穿上華服後氣質非凡，在街頭巧遇李白！李白對你一見如故，邀你同遊皇宮！');
+      } else {
+        showNarration(`購買了${item.name}！`);
+      }
+
+      consumeActionPoint();
+      updateUI();
+
+      if (item.quest) {
+        const quest = [...gameState.mainQuests, ...gameState.sideQuests].find(q => q.id === item.quest);
+        if (quest && !quest.completed) {
+          if (quest.target) {
+            quest.progress++;
+            if (quest.progress >= quest.target) {
+              quest.completed = true;
+              showNarration(`任務完成：${quest.text}！`);
+            }
+          } else {
+            quest.completed = true;
+            showNarration(`任  完成：${quest.text}！`);
+          }
+        }
+      }
+
+      document.getElementById('shopMoneyDisplay').textContent = gameState.money;
+    }
+
+    function visitAttraction(attraction) {
+      if (gameState.actionPoints <= 0) {
+        showNarration('今日行動點已用盡！');
+        return;
+      }
+
+      const cityKey = gameState.currentCity;
+      
+      if (cityKey === 'changan' && attraction === '曲江池') {
+        startPoetryInteraction('changan_qujiangchi');
+        return;
+      }
+      if (cityKey === 'yangzhou' && attraction === '二十四橋') {
+        startPoetryInteraction('yangzhou_bridge');
+        return;
+      }
+      if (cityKey === 'youzhou' && attraction === '胡人酒肆') {
+        startPoetryInteraction('youzhou_jiulv');
+        return;
+      }
+      if (cityKey === 'chengdu' && attraction === '杜甫草堂') {
+        startPoetryInteraction('chengdu_caotang');
+        return;
+      }
+
+      consumeActionPoint();
+      showNarration(`你欣賞了${attraction}的美景，暫無更多詩詞故事，敬請期待後續更新！`);
+    }
+
+    function startPoetryInteraction(poetryKey) {
+      currentPoetryKey = poetryKey;
+      currentPoetryStage = 1;
+      showPoetryStage1();
+    }
+
+    function showPoetryStage1() {
+      const poetry = poetryData[currentPoetryKey];
+      const stage = poetry.stage1;
+
+      const choicesHTML = stage.choices.map(c => 
+        `<button class="choice-btn" onclick="handlePoetryChoice('${c.action}')">${c.text}</button>`
+      ).join('');
+
+      document.getElementById('poetryContainer').innerHTML = `
+        <div class="poetry-description">${stage.description}</div>
+        <div class="poetry-choices">${choicesHTML}</div>
+      `;
+      
+      const fromScene = document.querySelector('.scene.active').id;
+      switchScene(fromScene, 'scenePoetry');
+    }
+
+    function handlePoetryChoice(action) {
+      if (currentPoetryStage === 1) {
+        showPoetryStage2(action);
+      }
+    }
+
+    function showPoetryStage2(action) {
+      currentPoetryStage = 2;
+      const poetry = poetryData[currentPoetryKey];
+      const text = poetry.stage2[action];
+
+      document.getElementById('poetryContainer').innerHTML = `
+        <div class="poetry-description">${text}</div>
+        <div class="poetry-choices">
+          <button class="choice-btn" onclick="revealPoetry()">✍️ 詩人開始吟詩……</button>
+        </div>
+      `;
+    }
+
+    function revealPoetry() {
+      currentPoetryStage = 3;
+      const poetry = poetryData[currentPoetryKey];
+      const stage = poetry.stage3;
+
+      const versesHTML = stage.verses.map((v, i) => 
+        `<div class="poetry-reveal-verse" style="animation-delay: ${i * 1.8}s">${v}</div>`
+      ).join('');
+
+      document.getElementById('poetryRevealContainer').innerHTML = `
+        <h2 class="poetry-reveal-title" style="animation: fadeInVerse 2s ease forwards;">《${stage.title}》</h2>
+        <p class="poetry-reveal-author" style="animation: fadeInVerse 2s ease forwards; animation-delay: 0.8s;">作者：${stage.author}</p>
+        ${versesHTML}
+        <button class="continue-btn" onclick="showPoetryStage4()" style="opacity: 0; animation: fadeInVerse 1.5s ease forwards; animation-delay: ${stage.verses.length * 1.8 + 1.5}s;">繼續</button>
+      `;
+
+      switchScene('scenePoetry', 'scenePoetryReveal');
+
+      setTimeout(() => {
+        document.querySelectorAll('.poetry-reveal-verse').forEach(v => v.classList.add('show'));
+      }, 100);
+    }
+
+    function showPoetryStage4() {
+      currentPoetryStage = 4;
+      const poetry = poetryData[currentPoetryKey];
+      const stage = poetry.stage4;
+
+      const choicesHTML = stage.choices.map(c => 
+        `<button class="choice-btn" onclick='completePoetry(${JSON.stringify(c.reward)})'>${c.text}</button>`
+      ).join('');
+
+      document.getElementById('poetryContainer').innerHTML = `
+        <div class="poetry-description">${stage.description}</div>
+        <div class="poetry-choices">${choicesHTML}</div>
+      `;
+
+      switchScene('scenePoetryReveal', 'scenePoetry');
+    }
+
+    function completePoetry(reward) {
+      gameState.money += reward.money;
+
+      if (reward.quest === 'poetry') {
+        if (!gameState.completedPoetry.includes(currentPoetryKey)) {
+          gameState.completedPoetry.push(currentPoetryKey);
+          
+          const quest = gameState.mainQuests.find(q => q.id === 'q2');
+          if (quest && !quest.completed) {
+            quest.progress++;
+            if (quest.progress >= quest.target) {
+              quest.completed = true;
+              showNarration('主線任務完成：收集詩詞！');
+            }
+          }
+        }
+      } else if (reward.quest) {
+        const quest = [...gameState.mainQuests, ...gameState.sideQuests].find(q => q.id === reward.quest);
+        if (quest && !quest.completed) {
+          if (quest.target) {
+            quest.progress++;
+            if (quest.progress >= quest.target) {
+              quest.completed = true;
+            }
+          } else {
+            quest.completed = true;
+          }
+          showNarration(`任務完成：${quest.text}！`);
+        }
+      }
+
+      consumeActionPoint();
+      updateUI();
+      showNarration(`獲得 ${reward.money} 兩銀子！`);
+      
+      setTimeout(() => {
+        if (currentPoetryKey === 'changan_palace' || currentPoetryKey === 'changan_huaqingchi') {
+          switchScene('scenePoetry', 'scenePalace');
+        } else {
+          switchScene('scenePoetry', 'sceneCityMap');
+        }
+      }, 2000);
+    }
+
+    function sleepUnderBridge() {
+      if (gameState.actionPoints <= 0) {
+        showNarration('今日行動點已用盡！');
+        return;
+      }
+
+      if (gameState.season === 'winter') {
+        gameState.bridgeSleepCount++;
+        if (gameState.bridgeSleepCount >= 3) {
+          showNarration('你在冬季橋洞受凍過  ，不幸病逝……遊戲結束');
+          setTimeout(() => {
+            document.getElementById('gameUI').style.display = 'none';
+            switchScene('sceneCityMap', 'sceneCover');
+          }, 3000);
+          return;
+        }
+        showNarration('在寒冷的   下瑟瑟發抖……');
+      } else {
+        const random = Math.random();
+        if (random < 0.3 && gameState.inventory.length > 0) {
+          const lostItem = gameState.inventory.splice(Math.floor(Math.random() * gameState.inventory.length), 1)[0];
+          showNarration(`夜裡遭遇盜賊，失去了${lostItem.name}！`);
+        } else {
+          showNarration('在橋下勉強度   一夜');
+        }
+      }
+
+      consumeActionPoint();
+      updateUI();
+    }
+
+    function openInventory() {
+      const itemsHTML = gameState.inventory.length > 0 ? 
+        gameState.inventory.map(item => `
+          <div class="inventory-item">
+            <div class="item-icon">${item.icon}</div>
+            <div class="item-name">${item.name}</div>
+            <div class="item-value">價值 ${item.value} 兩</div>
+          </div>
+        `).join('') : 
+        '<p style="color: #b3e5d8; text-align: center; grid-column: 1/-1;">包袱空空如也</p>';
+
+      document.getElementById('inventoryGrid').innerHTML = itemsHTML;
+      document.getElementById('inventoryModal').classList.add('active');
+    }
+
+    function closeInventory() {
+      document.getElementById('inventoryModal').classList.remove('active');
+    }
+
+    function openSaveModal() {
+      const timestamp = new Date().toLocaleString('zh-TW');
+      document.getElementById('saveNameInput').value = `${gameState.playerName}的存檔_${timestamp}`;
+      document.getElementById('saveModal').classList.add('active');
+    }
+
+    function closeSaveModal() {
+      document.getElementById('saveModal').classList.remove('active');
+    }
+
+    async function confirmSave() {
+      const saveName = document.getElementById('saveNameInput').value.trim();
+      if (!saveName) {
+        showNarration('請輸入存檔  稱！');
+        return;
+      }
+
+      if (allSaveRecords.length >= 999) {
+        showNarration('存檔數量已達上限（999個）！');
+        return;
+      }
+
+      const saveData = {
+        save_name: saveName,
+        player_name: gameState.playerName,
+        money: gameState.money,
+        season: gameState.season,
+        day: gameState.day,
+        action_points: gameState.actionPoints,
+        current_region: gameState.currentRegion,
+        current_city: gameState.currentCity,
+        bridge_sleep_count: gameState.bridgeSleepCount,
+        inventory: JSON.stringify(gameState.inventory),
+        main_quests: JSON.stringify(gameState.mainQuests),
+        side_quests: JSON.stringify(gameState.sideQuests),
+        visited_poetry: JSON.stringify(gameState.visitedPoetry),
+        completed_poetry: JSON.stringify(gameState.completedPoetry),
+        completed_events: JSON.stringify(gameState.completedEvents),
+        merchant_investments: JSON.stringify(gameState.merchantInvestments),
+        save_timestamp: new Date().toISOString()
+      };
+
+      const result = await window.dataSdk.create(saveData);
+      if (result.isOk) {
+        showNarration('存檔成功！');
+        closeSaveModal();
+      } else {
+        showNarration('存   失敗，請稍後再  ！');
+      }
+    }
+
+    function openLoadModal() {
+      if (allSaveRecords.length === 0) {
+        showNarration('沒有存檔記錄！');
+        return;
+      }
+
+      const savesHTML = allSaveRecords.map(save => {
+        const saveDate = new Date(save.save_timestamp).toLocaleString('zh-TW');
+        return `
+          <div class="save-item" onclick='loadSaveFile(${JSON.stringify(save.__backendId)})'>
+            <div class="save-item-name">${save.save_name}</div>
+            <div class="save-item-info">
+              ${save.player_name} | 💰 ${save.money}兩 | ${seasonNames[save.season]}<br>
+              📅 ${saveDate}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('saveList').innerHTML = savesHTML;
+      document.getElementById('loadModal').classList.add('active');
+    }
+
+    function closeLoadModal() {
+      document.getElementById('loadModal').classList.remove('active');
+    }
+
+    function loadSaveFile(backendId) {
+      const save = allSaveRecords.find(s => s.__backendId === backendId);
+      if (!save) return;
+
+      gameState = {
+        playerName: save.player_name,
+        money: save.money,
+        season: save.season,
+        day: save.day,
+        actionPoints: save.action_points,
+        maxActionPoints: 5,
+        currentRegion: save.current_region,
+        currentCity: save.current_city,
+        bridgeSleepCount: save.bridge_sleep_count,
+        inventory: JSON.parse(save.inventory),
+        mainQuests: JSON.parse(save.main_quests),
+        sideQuests: JSON.parse(save.side_quests),
+        visitedPoetry: JSON.parse(save.visited_poetry),
+        completedPoetry: JSON.parse(save.completed_poetry),
+        completedEvents: JSON.parse(save.completed_events || '[]'),
+        merchantInvestments: JSON.parse(save.merchant_investments || '[]'),
+        visitedCities: []
+      };
+
+      document.getElementById('gameUI').style.display = 'block';
+      updateUI();
+      closeLoadModal();
+      switchScene('sceneCover', 'sceneRegionMap');
+      showNarration('讀  存檔成功！');
+    }
+
+    function backToMarket() {
+      switchScene('sceneShop', 'sceneMarket');
+    }
+
+    function backToCityMap() {
+      switchScene('sceneMarket', 'sceneCityMap');
+    }
+
+    function backToCitySelect() {
+      switchScene('sceneCityMap', 'sceneCitySelect');
+    }
+
+    function backToRegionMap() {
+      switchScene('sceneCitySelect', 'sceneRegionMap');
+    }
+
+    initSDK();
+    updateUI();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>踏詩遊唐</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Noto Serif TC', 'KaiTi', 'STKaiti', serif;
+      background: linear-gradient(135deg, #a8d5e2 0%, #b3e5d8 100%);
+      color: #2d5a5a;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    html {
+      height: 100%;
+    }
+
+    .game-ui-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    .top-bar {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .info-box {
+      background: linear-gradient(135deg, rgba(139, 69, 19, 0.9) 0%, rgba(101, 67, 33, 0.9) 100%);
+      border: 3px solid #d4af37;
+      border-radius: 12px;
+      padding: 12px 20px;
+      color: #ffd700;
+      font-size: 1.3em;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+      letter-spacing: 0.1em;
+    }
+
+    .quest-panel {
+      position: fixed;
+      left: 20px;
+      top: 20px;
+      width: 280px;
+      max-height: 80%;
+      background: linear-gradient(135deg, rgba(139, 69, 19, 0.95) 0%, rgba(101, 67, 33, 0.95) 100%);
+      border: 3px solid #d4af37;
+      border-radius: 15px;
+      padding: 20px;
+      pointer-events: auto;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+      overflow-y: auto;
+    }
+
+    .quest-title {
+      font-size: 1.8em;
+      color: #ffd700;
+      text-align: center;
+      margin-bottom: 20px;
+      letter-spacing: 0.2em;
+      border-bottom: 2px solid #d4af37;
+      padding-bottom: 10px;
+    }
+
+    .quest-section {
+      margin: 15px 0;
+    }
+
+    .quest-section-header {
+      font-size: 1.4em;
+      color: #ffeb3b;
+      margin-bottom: 10px;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .quest-section-header:hover {
+      background: rgba(212, 175, 55, 0.2);
+    }
+
+    .quest-list {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .quest-list.expanded {
+      max-height: 500px;
+    }
+
+    .quest-item {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border-left: 3px solid #ffd700;
+      font-size: 1.1em;
+      color: #b3e5d8;
+      line-height: 1.6;
+    }
+
+    .quest-item.completed {
+      opacity: 0.6;
+      border-left-color: #4caf50;
+    }
+
+    .bottom-buttons {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .round-button {
+      width: 75px;
+      height: 75px;
+      background: linear-gradient(135deg, rgba(139, 69, 19, 0.9) 0%, rgba(101, 67, 33, 0.9) 100%);
+      border: 3px solid #d4af37;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+      transition: all 0.3s ease;
+    }
+
+    .round-button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 8px 25px rgba(212, 175, 55, 0.8);
+    }
+
+    .round-button.save {
+      background: linear-gradient(135deg, rgba(90, 138, 138, 0.9) 0%, rgba(74, 157, 157, 0.9) 100%);
+      border-color: #5a8a8a;
+    }
+
+    .button-icon {
+      font-size: 2.2em;
+    }
+
+    .button-label {
+      font-size: 0.95em;
+      color: #ffd700;
+      margin-top: 3px;
+    }
+
+    .narration {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(20, 20, 20, 0.85) 100%);
+      color: #ffd700;
+      padding: 25px 40px;
+      border-radius: 15px;
+      border: 3px solid #d4af37;
+      font-size: 1.6em;
+      max-width: 80%;
+      text-align: center;
+      z-index: 2500;
+      pointer-events: none;
+      letter-spacing: 0.15em;
+      line-height: 1.8;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+      animation: narrationFade 4s ease forwards;
+    }
+
+    @keyframes narrationFade {
+      0% { opacity: 0; transform: translate(-50%, 20px); }
+      10% { opacity: 1; transform: translate(-50%, 0); }
+      85% { opacity: 1; transform: translate(-50%, 0); }
+      100% { opacity: 0; transform: translate(-50%, -20px); }
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      pointer-events: auto;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: linear-gradient(135deg, rgba(139, 69, 19, 0.98) 0%, rgba(101, 67, 33, 0.98) 100%);
+      border: 4px solid #d4af37;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 900px;
+      max-height: 85%;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+      position: relative;
+    }
+
+    .modal-title {
+      font-size: 2.5em;
+      color: #ffd700;
+      text-align: center;
+      margin-bottom: 30px;
+      letter-spacing: 0.3em;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 2.5em;
+      color: #ffd700;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 5px 15px;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: #fff;
+    }
+
+    .save-input-group {
+      margin: 25px 0;
+    }
+
+    .save-input-label {
+      display: block;
+      color: #ffd700;
+      font-size: 1.5em;
+      margin-bottom: 10px;
+      letter-spacing: 0.1em;
+    }
+
+    .save-input {
+      width: 100%;
+      padding: 15px;
+      font-size: 1.4em;
+      background: rgba(0, 0, 0, 0.3);
+      border: 2px solid #d4af37;
+      border-radius: 10px;
+      color: #b3e5d8;
+      font-family: 'Noto Serif TC', 'KaiTi', serif;
+    }
+
+    .save-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin: 20px 0;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .save-item {
+      background: rgba(0, 0, 0, 0.3);
+      border: 2px solid #d4af37;
+      border-radius: 10px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .save-item:hover {
+      background: rgba(212, 175, 55, 0.2);
+      transform: translateX(5px);
+    }
+
+    .save-item-name {
+      font-size: 1.6em;
+      color: #ffd700;
+      margin-bottom: 8px;
+    }
+
+    .save-item-info {
+      font-size: 1.2em;
+      color: #b3e5d8;
+      line-height: 1.6;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+
+    .modal-btn {
+      padding: 15px 40px;
+      font-size: 1.6em;
+      background: linear-gradient(135deg, #5a8a8a 0%, #4a9d9d 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Noto Serif TC', 'KaiTi', serif;
+      letter-spacing: 0.2em;
+      transition: all 0.3s ease;
+    }
+
+    .modal-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(90, 138, 138, 0.7);
+    }
+
+    .modal-btn.cancel {
+      background: linear-gradient(135deg, rgba(90, 90, 90, 0.8) 0%, rgba(70, 70, 70, 0.8) 100%);
+    }
+
+    .inventory-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .inventory-item {
+      background: rgba(0, 0, 0, 0.3);
+      border: 2px solid #d4af37;
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .item-icon {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+
+    .item-name {
+      font-size: 1.2em;
+      color: #b3e5d8;
+      margin-bottom: 5px;
+    }
+
+    .item-value {
+      font-size: 1em;
+      color: #ffd700;
+    }
+
+    .game-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transition: background 1s ease;
+    }
+
+    .scene {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.8s ease, visibility 0s 0.8s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .scene.active {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.8s ease, visibility 0s 0s;
+    }
+
+    /* 開場場景 */
+    .scene-opening {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      flex-direction: column;
+    }
+
+    .opening-text {
+      max-width: 900px;
+      padding: 40px;
+      background: linear-gradient(135deg, rgba(139, 69, 19, 0.8) 0%, rgba(101, 67, 33, 0.8) 100%);
+      border: 4px solid #d4af37;
+      border-radius: 20px;
+      margin-bottom: 30px;
+    }
+
+    .opening-paragraph {
+      font-size: 1.8em;
+      color: #e0f7fa;
+      line-height: 2.5;
+      letter-spacing: 0.15em;
+      margin: 25px 0;
+      text-align: justify;
+      text-indent: 2em;
+    }
+
+    .name-input-container {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .name-input-label {
+      font-size: 2em;
+      color: #ffd700;
+      margin-bottom: 20px;
+      letter-spacing: 0.2em;
+      display: block;
+    }
+
+    .name-input {
+      padding: 20px 30px;
+      font-size: 2em;
+      background: rgba(0, 0, 0, 0.4);
+      border: 3px solid #d4af37;
+      border-radius: 10px;
+      color: #ffd700;
+      font-family: 'Noto Serif TC', 'KaiTi', serif;
+      text-align: center;
+      letter-spacing: 0.2em;
+      min-width: 300px;
+    }
+
+    /* 封面頁 */
+    .scene-cover {
+      background: linear-gradient(135deg, #FFB88C 0%, #FFA07A 30%, #FF8C69 60%, #87CEEB 100%);
+      flex-direction: column;
+    }
+
+    .book-cover {
+      width: 800px;
+      height: 600px;
+      background: linear-gradient(180deg, #FFD700 0%, #FFA500 20%, #FF8C69 40%, #87CEEB 70%, #4682B4 100%);
+      border: 8px solid #D4A574;
+      border-radius: 15px;
+      position: relative;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+      overflow: hidden;
+      margin-bottom: 30px;
+    }
+
+    .book-title {
+      position: absolute;
+      top: 30px;
+      right: 40px;
+      font-size: 3.5em;
+      color: #8B4513;
+      writing-mode: vertical-rl;
+      letter-spacing: 0.3em;
+      text-shadow: 2px 2px 8px rgba(255, 255, 255, 0.8);
+      z-index: 10;
+      font-weight: bold;
+    }
+
+    .cover-illustration {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    /* 日落太陽 */
+    .cover-sun {
+      position: absolute;
+      top: 8%;
+      right: 15%;
+      width: 100px;
+      height: 100px;
+      background: radial-gradient(circle, #FFF8DC 0%, #FFD700 50%, #FFA500 100%);
+      border-radius: 50%;
+      box-shadow: 0 0 60px rgba(255, 215, 0, 0.9);
+      z-index: 1;
+    }
+
+    /* 長江水面效果 */
+    .cover-river {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 40%;
+      background: linear-gradient(180deg, rgba(135, 206, 235, 0.8) 0%, rgba(70, 130, 180, 0.9) 100%);
+      z-index: 2;
+    }
+
+    .cover-river-shimmer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(0deg, 
+        rgba(255, 215, 0, 0.3) 0%, 
+        rgba(255, 165, 0, 0.2) 30%, 
+        transparent 60%);
+      animation: shimmer 3s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 0.8; }
+    }
+
+    /*      樓 */
+    .cover-tower {
+      position: absolute;
+      bottom: 35%;
+      left: 12%;
+      width: 200px;
+      height: 260px;
+      z-index: 4;
+    }
+
+    /* 穿越者角色們 */
+    .cover-travelers {
+      position: absolute;
+      bottom: 38%;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 30px;
+      z-index: 5;
+    }
+
+    .cover-traveler {
+      width: 120px;
+      height: 160px;
+    }
+
+    /* 飛舞的書卷 */
+    .cover-scrolls {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 6;
+      pointer-events: none;
+    }
+
+    .cover-scroll {
+      position: absolute;
+      animation: floatScroll 10s ease-in-out infinite;
+    }
+
+    .cover-scroll:nth-child(1) {
+      top: 15%;
+      left: 15%;
+      animation-delay: 0s;
+    }
+
+    .cover-scroll:nth-child(2) {
+      top: 20%;
+      right: 12%;
+      animation-delay: 2.5s;
+    }
+
+    .cover-scroll:nth-child(3) {
+      top: 45%;
+      left: 8%;
+      animation-delay: 5s;
+    }
+
+    .cover-scroll:nth-child(4) {
+      top: 50%;
+      right: 20%;
+      animation-delay: 7.5s;
+    }
+
+    @keyframes floatScroll {
+      0%, 100% { 
+        transform: translateY(0) rotate(-8deg); 
+        opacity: 0.7; 
+      }
+      50% { 
+        transform: translateY(-25px) rotate(8deg); 
+        opacity: 1; 
+      }
+    }
+
+    .menu-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .menu-btn {
+      padding: 15px 60px;
+      font-size: 1.8em;
+      background: linear-gradient(135deg, #5a8a8a 0%, #4a9d9d 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Noto Serif TC', 'KaiTi', serif;
+      letter-spacing: 0.3em;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 20px rgba(90, 138, 138, 0.5);
+    }
+
+    .menu-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(90, 138, 138, 0.7);
+    }
+
+    .menu-btn.secondary {
+      background: linear-gradient(135deg, rgba(90, 138, 138, 0.7) 0%, rgba(74, 157, 157, 0.7) 100%);
+    }
+
+    /* 地圖場景 */
+    .map-scene {
+      padding: 2%;
+      overflow-y: auto;
+    }
+
+    .map-container {
+      max-width: 95%;
+      width: 1600px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+      border: 4px solid #5a8a8a;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .map-title {
+      text-align: center;
+      font-size: 3em;
+      color: #2d5a5a;
+      margin: 0 0 30px 0;
+      letter-spacing: 0.3em;
+      text-shadow: 0 2px 5px rgba(255, 255, 255, 0.5);
+    }
+
+    .map-svg {
+      width: 100%;
+      height: auto;
+      min-height: 600px;
+    }
+
+    .location-marker {
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .location-marker:hover {
+      transform: scale(1.08);
+    }
+
+    .location-marker circle {
+      fill: #5a8a8a;
+      stroke: #2d5a5a;
+      stroke-width: 2;
+      transition: all 0.3s ease;
+    }
+
+    .location-marker:hover circle {
+      fill: #4a9d9d;
+      filter: drop-shadow(0 0 8px rgba(74, 157, 157, 0.8));
+    }
+
+    .location-marker text {
+      fill: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    /* 城市選擇地圖 */
+    .city-select-container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .region-name {
+      font-size: 3.5em;
+      color: #2d5a5a;
+      text-align: center;
+      letter-spacing: 0.3em;
+      text-shadow: 0 2px 10px rgba(255, 255, 255, 0.5);
+      margin: 0 0 40px 0;
+    }
+
+    .city-select-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 30px;
+      margin: 40px 0;
+    }
+
+    .city-select-card {
+      height: 180px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .city-select-card:hover {
+      transform: translateY(-8px);
+    }
+
+    .city-select-icon {
+      font-size: 5em;
+      margin-bottom: 15px;
+    }
+
+    .city-select-name {
+      font-size: 2em;
+      color: #2d5a5a;
+      letter-spacing: 0.3em;
+      text-align: center;
+      text-shadow: 0 2px 5px rgba(255, 255, 255, 0.8);
+    }
+
+    /* 城市地圖 */
+    .city-map-container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .city-map-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .city-name {
+      font-size: 3.5em;
+      color: #2d5a5a;
+      letter-spacing: 0.3em;
+      text-shadow: 0 2px 10px rgba(255, 255, 255, 0.5);
+      margin: 0 0 20px 0;
+    }
+
+    .city-locations {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 25px;
+      margin: 40px 0;
+    }
+
+    .location-card {
+      height: 180px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .location-card:hover {
+      transform: translateY(-8px);
+    }
+
+    .location-card.locked {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .location-icon {
+      font-size: 4em;
+      margin-bottom: 15px;
+    }
+
+    .location-label {
+      font-size: 1.6em;
+      color: #2d5a5a;
+      letter-spacing: 0.2em;
+      text-align: center;
+      text-shadow: 0 2px 5px rgba(255, 255, 255, 0.8);
+    }
+
+    .location-note {
+      font-size: 1em;
+      color: #666;
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    /* 街市場景 */
+    .market-scene {
+      padding: 3%;
+      overflow-y: auto;
+    }
+
+    .market-container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .market-title {
+      font-size: 3em;
+      color: #2d5a5a;
+      text-align: center;
+      margin-bottom: 40px;
+      letter-spacing: 0.3em;
+      text-shadow: 0 2px 10px rgba(255, 255, 255, 0.5);
+    }
+
+    .market-shops {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 25px;
+      margin: 40px 0;
+    }
+
+    .market-shop-card {
+      height: 180px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .market-shop-card:hover {
+      transform: translateY(-8px);
+    }
+
+    /* 商店場景 */
+    .shop-scene {
+      padding: 3%;
+      overflow-y: auto;
+    }
+
+    .shop-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, rgba(139, 69, 19, 0.7) 0%, rgba(101, 67, 33, 0.7) 100%);
+      border: 4px solid #d4af37;
+      border-radius: 20px;
+      padding: 40px;
+    }
+
+    .shop-title {
+      font-size: 3em;
+      color: #ffd700;
+      text-align: center;
+      margin-bottom: 20px;
+      letter-spacing: 0.3em;
+    }
+
+    .shop-description {
+      text-align: center;
+      color: #b3e5d8;
+      font-size: 1.4em;
+      line-height: 1.8;
+      margin-bottom: 25px;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+    }
+
+    .money-display {
+      text-align: center;
+      font-size: 1.6em;
+      color: #ffd700;
+      margin: 20px 0;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+    }
+
+    .shop-items {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 20px;
+      margin: 30px 0;
+    }
+
+    .shop-item {
+      background: rgba(0, 0, 0, 0.3);
+      border: 2px solid #d4af37;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .shop-item:hover {
+      background: rgba(212, 175, 55, 0.2);
+      transform: scale(1.05);
+    }
+
+    .shop-item-icon {
+      font-size: 3em;
+      margin-bottom: 10px;
+    }
+
+    .shop-item-name {
+      font-size: 1.4em;
+      color: #b3e5d8;
+      margin-bottom: 10px;
+    }
+
+    .shop-item-price {
+      font-size: 1.2em;
+      color: #ffd700;
+    }
+
+    /* 詩詞互  場景 */
+    .poetry-scene {
+      padding: 3%;
+      overflow-y: auto;
+    }
+
+    .poetry-container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .poetry-description {
+      background: linear-gradient(135deg, rgba(90, 138, 138, 0.4) 0%, rgba(74, 157, 157, 0.4) 100%);
+      border: 3px solid #5a8a8a;
+      border-radius: 15px;
+      padding: 30px;
+      margin-bottom: 30px;
+      color: #e0f7fa;
+      font-size: 1.7em;
+      line-height: 2.2;
+      text-align: center;
+      letter-spacing: 0.12em;
+    }
+
+    .poetry-choices {
+      display: flex;
+      gap: 20px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+
+    .choice-btn {
+      flex: 1;
+      min-width: 200px;
+      padding: 25px;
+      font-size: 1.7em;
+      background: linear-gradient(135deg, rgba(90, 138, 138, 0.4) 0%, rgba(74, 157, 157, 0.4) 100%);
+      border: 3px solid #5a8a8a;
+      color: #e0f7fa;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'Noto Serif TC', 'KaiTi', serif;
+      letter-spacing: 0.2em;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .choice-btn:hover {
+      background: linear-gradient(135deg, #5a8a8a 0%, #4a9d9d 100%);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(90, 138, 138, 0.7);
+    }
+
+    /* 白幕詩詞顯示 */
+    .poetry-reveal-scene {
+      background: #ffffff;
+    }
+
+    .poetry-reveal-container {
+      max-width: 900px;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .poetry-reveal-title {
+      font-size: 3.2em;
+      color: #2d5a5a;
+      margin-bottom: 25px;
+      letter-spacing: 0.3em;
+      opacity: 0;
+    }
+
+    .poetry-reveal-author {
+      font-size: 2em;
+      color: #5a8a8a;
+      margin-bottom: 50px;
+      opacity: 0;
+    }
+
+    .poetry-reveal-verse {
+      font-size: 2.6em;
+      color: #2d5a5a;
+      line-height: 2.8;
+      letter-spacing: 0.35em;
+      margin: 35px 0;
+      opacity: 0;
+    }
+
+    .poetry-reveal-verse.show {
+      animation: fadeInVerse 2.5s ease forwards;
+    }
+
+    @keyframes fadeInVerse {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .continue-btn {
+      margin-top: 50px;
+      padding: 20px 60px;
+      font-size: 1.8em;
+      background: linear-gradient(135deg, #5a8a8a 0%, #4a9d9d 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Noto Serif TC', 'KaiTi', serif;
+      letter-spacing: 0.2em;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 20px rgba(90, 138, 138, 0.5);
+    }
+
+    .continue-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(90, 138, 138, 0.7);
+    }
+
+    .back-btn {
+      margin-top: 30px;
+      padding: 18px 50px;
+      font-size: 1.6em;
+      background: linear-gradient(135deg, rgba(90, 90, 90, 0.8) 0%, rgba(70, 70, 70, 0.8) 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Noto Serif TC', 'KaiTi', serif;
+      letter-spacing: 0.2em;
+      transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .input-error {
+      color: #ff6b6b;
+      font-size: 1.2em;
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    /* 店小二命名場景 */
+    .scene-naming {
+      background: linear-gradient(135deg, #8b7355 0%, #6b5742 100%);
+      flex-direction: column;
+    }
+
+    .naming-container {
+      max-width: 800px;
+      padding: 40px;
+      background: linear-gradient(135deg, rgba(245, 222, 179, 0.95) 0%, rgba(222, 184, 135, 0.95) 100%);
+      border: 4px solid #8b6f47;
+      border-radius: 20px;
+    }
+
+    .waiter-scene-content {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+
+    .waiter-character {
+      width: 200px;
+      height: 280px;
+      flex-shrink: 0;
+    }
+
+    .waiter-dialogue {
+      flex: 1;
+      font-size: 1.8em;
+      color: #2d5a5a;
+      line-height: 2.2;
+      letter-spacing: 0.15em;
+      text-align: left;
+      padding: 25px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 15px;
+      border: 3px solid #8b6f47;
+    }
+
+    @media (max-width: 768px) {
+      .quest-panel {
+        width: 220px;
+      }
+
+      .round-button {
+        width: 60px;
+        height: 60px;
+      }
+
+      .city-locations, .city-select-grid, .market-shops {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  </style> <!-- 遊戲UI疊加層 -->
+  <div class="game-ui-overlay" id="gameUI" style="display: none;">
+   <div class="top-bar">
+    <div class="info-box" id="seasonDisplay">
+     春季 上旬
+    </div>
+    <div class="info-box" id="actionDisplay">
+     行動點: 5/5
+    </div>
+    <div class="info-box" id="moneyDisplay">
+     💰 100兩
+    </div>
+   </div>
+   <div class="quest-panel">
+    <div class="quest-title">
+     任務
+    </div>
+    <div class="quest-section">
+     <div class="quest-section-header" onclick="toggleQuestSection('main')"><span>🎯 主線任務</span> <span id="mainToggle">▼</span>
+     </div>
+     <div class="quest-list" id="mainQuestList"></div>
+    </div>
+    <div class="quest-section">
+     <div class="quest-section-header" onclick="toggleQuestSection('side')"><span>📋 支線任務</span> <span id="sideToggle">▼</span>
+     </div>
+     <div class="quest-list" id="sideQuestList"></div>
+    </div>
+   </div>
+   <div class="bottom-buttons">
+    <div class="round-button save" onclick="openSaveModal()">
+     <div class="button-icon">
+      💾
+     </div>
+     <div class="button-label">
+      存  
+     </div>
+    </div>
+    <div class="round-button" onclick="openInventory()">
+     <div class="button-icon">
+      🎒
+     </div>
+     <div class="button-label">
+      包袱
+     </div>
+    </div>
+   </div>
+  </div><!-- 存檔模態框 -->
+  <div class="modal-overlay" id="saveModal">
+   <div class="modal-content"><button class="modal-close" onclick="closeSaveModal()">×</button>
+    <h2 class="modal-title">存檔</h2>
+    <div class="save-input-group"><label class="save-input-label">存檔名稱：</label> <input type="text" class="save-input" id="saveNameInput" placeholder="輸入存檔名稱..." maxlength="30">
+    </div>
+    <div class="modal-buttons"><button class="modal-btn" onclick="confirmSave()">確認存檔</button> <button class="modal-btn cancel" onclick="closeSaveModal()">取消</button>
+    </div>
+   </div>
+  </div><!-- 讀檔模態框 -->
+  <div class="modal-overlay" id="loadModal">
+   <div class="modal-content"><button class="modal-close" onclick="closeLoadModal()">×</button>
+    <h2 class="modal-title">讀取存檔</h2>
+    <div class="save-list" id="saveList"></div>
+    <div class="modal-buttons"><button class="modal-btn cancel" onclick="closeLoadModal()">取消</button>
+    </div>
+   </div>
+  </div><!-- 包袱模態框 -->
+  <div class="modal-overlay" id="inventoryModal">
+   <div class="modal-content"><button class="modal-close" onclick="closeInventory()">×</button>
+    <h2 class="modal-title">包袱</h2>
+    <div class="money-display">
+     持有銀兩：<span id="modalMoneyDisplay">100</span> 兩
+    </div>
+    <h3 style="color: #ffd700; font-size: 1.8em; margin: 20px 0;">身上物品</h3>
+    <div class="inventory-grid" id="inventoryGrid"></div>
+    <div style="text-align: center; margin-top: 30px;"><button class="continue-btn" onclick="closeInventory()">關閉</button>
+    </div>
+   </div>
+  </div>
+  <div class="game-container" id="gameContainer"><!-- 場景1: 開場劇情 -->
+   <div class="scene scene-opening" id="sceneOpening">
+    <div class="opening-text">
+     <p class="opening-paragraph">大唐開元盛世，天寶年間。長安城   繁華喧囂，胡商絡繹不絕，四海賓朋雲集。你自幼飽讀詩書，心懷遊歷天下、結交名士之志。</p>
+     <p class="opening-paragraph">某日，你於書肆中偶得《唐詩選集》殘卷，其中詩句雋永動人，令你心馳神往。你決意離開家鄉，踏上詩境之旅，尋訪大唐各地名   ，體悟詩人筆下的山川風   ……</p>
+     <p class="opening-paragraph">臨行前，母親為你備好行囊，父親贈你百兩銀子。你背起包袱，踏出家門，開啟屬於自己的傳奇。</p>
+     <div style="text-align: center; margin-top: 30px;"><button class="continue-btn" onclick="goToNaming()">踏上旅途</button>
+     </div>
+    </div>
+   </div><!-- 場景2: 店小二命名 -->
+   <div class="scene scene-naming" id="sceneNaming">
+    <div class="naming-container">
+     <div class="waiter-icon">
+      🍵
+     </div>
+     <p class="waiter-dialogue">「客官您好！小的是這客棧的店小二。看您這打  ，  要出遠門吧？不知客官   姓大  ？」</p>
+     <div class="name-input-container"><input type="text" id="playerNameInput" class="name-input" placeholder="告  店小二你   名   ..." maxlength="10">
+      <div id="nameError" class="input-error"></div>
+      <div style="margin-top: 30px;"><button class="continue-btn" onclick="confirmName()">告訴店小二</button>
+      </div>
+     </div>
+    </div>
+   </div><!-- 場景3: 封面頁 -->
+   <div class="scene scene-cover active" id="sceneCover">
+    <div class="book-cover">
+     <h1 class="book-title" id="gameTitle">踏詩遊唐</h1>
+     <div class="cover-illustration"><!-- 日落天空 -->
+      <div class="sunset-sky">
+       <div class="sun"></div>
+      </div><!-- 黃鶴樓 SVG -->
+      <svg class="yellow-crane-tower" viewbox="0 0 180 220" xmlns="http://www.w3.org/2000/svg"><!-- 樓身 --> <polygon points="40,180 140,180 130,150 50,150" fill="#8B4513" stroke="#654321" stroke-width="2" /> <polygon points="35,150 145,150 135,120 45,120" fill="#A0522D" stroke="#654321" stroke-width="2" /> <polygon points="30,120 150,120 140,90 40,90" fill="#8B4513" stroke="#654321" stroke-width="2" /> <!-- 屋頂 --> <polygon points="20,90 160,90 170,70 10,70" fill="#CD5C5C" stroke="#8B3A3A" stroke-width="2" /> <polygon points="15,70 165,70 175,50 5,50" fill="#DC143C" stroke="#8B3A3A" stroke-width="2" /> <polygon points="10,50 170,50 180,30 0,30" fill="#CD5C5C" stroke="#8B3A3A" stroke-width="2" /> <!-- 塔尖 --> <polygon points="70,30 110,30 90,0" fill="#FFD700" stroke="#DAA520" stroke-width="2" /> <!--   戶 --> <rect x="60" y="125" width="20" height="20" fill="#FFF8DC" stroke="#654321" /> <rect x="100" y="125" width="20" height="20" fill="#FFF8DC" stroke="#654321" /> <rect x="70" y="95" width="15" height="15" fill="#FFF8DC" stroke="#654321" /> <rect x="95" y="95" width="15" height="15" fill="#FFF8DC" stroke="#654321" />
+      </svg><!-- 穿越者少女少年 SVG -->
+      <div class="travelers"><!-- 少女 -->
+       <svg class="traveler" viewbox="0 0 100 140" xmlns="http://www.w3.org/2000/svg"><!-- 身體 --> <ellipse cx="50" cy="120" rx="25" ry="18" fill="#FFB6C1" /> <rect x="30" y="70" width="40" height="50" rx="8" fill="#FFC0CB" /> <!-- 頭部 --> <circle cx="50" cy="35" r="20" fill="#FFE4C4" /> <!-- 頭髮 --> <path d="M 30 35 Q 30 15 50 15 Q 70 15 70 35 L 65 40 Q 50 25 35 40 Z" fill="#2C1810" /> <!-- 眼睛 --> <circle cx="43" cy="35" r="3" fill="#000" /> <circle cx="57" cy="35" r="3" fill="#000" /> <!-- 微笑 --> <path d="M 42 42 Q 50 46 58 42" stroke="#000" stroke-width="2" fill="none" /> <!-- 手臂 --> <rect x="20" y="75" width="10" height="35" rx="5" fill="#FFDAB9" /> <rect x="70" y="75" width="10" height="35" rx="5" fill="#FFDAB9" /> <!-- 書卷 --> <rect x="15" y="100" width="18" height="25" rx="2" fill="#F5DEB3" stroke="#8B6914" stroke-width="1" />
+       </svg><!-- 少年 -->
+       <svg class="traveler" viewbox="0 0 100 140" xmlns="http://www.w3.org/2000/svg"><!-- 身體 --> <ellipse cx="50" cy="120" rx="25" ry="18" fill="#87CEEB" /> <rect x="30" y="70" width="40" height="50" rx="8" fill="#87CEFA" /> <!-- 頭部 --> <circle cx="50" cy="35" r="20" fill="#FFE4C4" /> <!-- 頭髮 --> <path d="M 32 30 Q 35 18 50 15 Q 65 18 68 30 L 65 35 Q 50 22 35 35 Z" fill="#2C1810" /> <!-- 眼睛 --> <circle cx="43" cy="35" r="3" fill="#000" /> <circle cx="57" cy="35" r="3" fill="#000" /> <!-- 微笑 --> <path d="M 42 42 Q 50 46 58 42" stroke="#000" stroke-width="2" fill="none" /> <!-- 手臂 --> <rect x="20" y="75" width="10" height="35" rx="5" fill="#FFDAB9" /> <rect x="70" y="75" width="10" height="35" rx="5" fill="#FFDAB9" /> <!-- 扇子 --> <path d="M 75 95 L 85 85 L 85 105 Z" fill="#FFF" stroke="#000" stroke-width="1" />
+       </svg>
+      </div><!--    江水面 -->
+      <div class="river">
+       <div class="river-reflection"></div>
+      </div><!-- 飛舞書卷 -->
+      <div class="flying-scrolls">
+       <div class="scroll"></div>
+       <div class="scroll"></div>
+       <div class="scroll"></div>
+       <div class="scroll"></div>
+      </div>
+     </div>
+    </div>
+    <div class="menu-buttons"><button class="menu-btn" onclick="startNewGame()">開始遊戲</button> <button class="menu-btn secondary" onclick="openLoadModal()">讀取存檔</button>
+    </div>
+   </div><!-- 場景4: 大唐十道地圖 -->
+   <div class="scene map-scene" id="sceneRegionMap">
+    <div class="map-container">
+     <h2 class="map-title">大唐十道</h2>
+     <svg class="map-svg" viewbox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="1200" height="800" fill="rgba(245, 235, 220, 0.2)" /> <path d="M 200 320 Q 280 290 360 310 Q 440 330 520 300 Q 600 270 680 295" fill="rgba(139, 90, 60, 0.5)" stroke="rgba(100, 60, 40, 0.6)" stroke-width="1" /> <path d="M 150 250 Q 300 240 450 255 Q 600 270 750 260" fill="none" stroke="rgba(100, 180, 200, 0.7)" stroke-width="3" /> <path d="M 100 520 Q 300 515 500 530 Q 700 545 900 535" fill="none" stroke="rgba(100, 180, 200, 0.7)" stroke-width="3" /> <g class="location-marker" onclick="enterRegion('guannei')">
+       <circle cx="350" cy="280" r="32" />
+       <text x="350" y="290">
+        關內
+       </text>
+      </g> <g class="location-marker" onclick="enterRegion('hebei')">
+       <circle cx="620" cy="200" r="32" />
+       <text x="620" y="210">
+        河北
+       </text>
+      </g> <g class="location-marker" onclick="enterRegion('hedong')">
+       <circle cx="480" cy="240" r="32" />
+       <text x="480" y="250">
+        河東
+       </text>
+      </g> <g class="location-marker" onclick="enterRegion('henan')">
+       <circle cx="550" cy="360" r="32" />
+       <text x="550" y="370">
+        河南
+       </text>
+      </g> <g class="location-marker" onclick="enterRegion('shannan')">
+       <circle cx="500" cy="480" r="32" />
+       <text x="500" y="490">
+        山   
+       </text>
+      </g> <g class="location-marker" onclick="enterRegion('huainan')">
+       <circle cx="680" cy="430" r="32" />
+       <text x="680" y="440">
+        淮南
+       </text>
+      </g> <g class="location-marker" onclick="enterRegion('jiangnan')">
+       <circle cx="820" cy="540" r="32" />
+       <text x="820" y="550">
+        江南
+       </text>
+      </g> <g class="location-marker" onclick="enterRegion('jiannan')">
+       <circle cx="280" cy="480" r="32" />
+       <text x="280" y="490">
+        劍南
+       </text>
+      </g> <g class="location-marker" onclick="enterRegion('longright')">
+       <circle cx="200" cy="300" r="32" />
+       <text x="200" y="310">
+        隴右
+       </text>
+      </g> <g class="location-marker" onclick="enterRegion('lingnan')">
+       <circle cx="700" cy="680" r="32" />
+       <text x="700" y="690">
+        嶺南
+       </text>
+      </g>
+     </svg>
+    </div>
+   </div><!-- 場景5: 城市選擇 -->
+   <div class="scene map-scene" id="sceneCitySelect">
+    <div class="city-select-container">
+     <h2 class="region-name" id="currentRegionName">關內道</h2>
+     <div class="city-select-grid" id="citySelectGrid"></div>
+     <div style="text-align: center; margin-top: 40px;"><button class="continue-btn" onclick="backToRegionMap()">返回十道地圖</button>
+     </div>
+    </div>
+   </div><!-- 場景6: 城市地圖 -->
+   <div class="scene map-scene" id="sceneCityMap">
+    <div class="city-map-container">
+     <div class="city-map-header">
+      <h2 class="city-name" id="currentCityName">長安</h2>
+     </div>
+     <div class="city-locations" id="cityLocations"></div>
+     <div style="text-align: center; margin-top: 40px;"><button class="continue-btn" onclick="backToCitySelect()">返回城市選擇</button>
+     </div>
+    </div>
+   </div><!-- 場景7: 街市場景 -->
+   <div class="scene market-scene" id="sceneMarket">
+    <div class="market-container">
+     <h2 class="market-title" id="marketTitle">街市</h2>
+     <div class="market-shops" id="marketShops"></div>
+     <div style="text-align: center; margin-top: 40px;"><button class="continue-btn" onclick="backToCityMap()">返回城市</button>
+     </div>
+    </div>
+   </div><!-- 場景8: 商店場景 -->
+   <div class="scene shop-scene" id="sceneShop">
+    <div class="shop-container" id="shopContainer"></div>
+   </div><!-- 場景9: 詩詞互動場景 -->
+   <div class="scene poetry-scene" id="scenePoetry">
+    <div class="poetry-container" id="poetryContainer"></div>
+   </div><!-- 場景10: 白幕詩詞顯示 -->
+   <div class="scene poetry-reveal-scene" id="scenePoetryReveal">
+    <div class="poetry-reveal-container" id="poetryRevealContainer"></div>
+   </div><!-- 場景11: 皇宮內部（含華清池） -->
+   <div class="scene map-scene" id="scenePalace">
+    <div class="city-map-container">
+     <div class="city-map-header">
+      <h2 class="city-name">大明宮</h2>
+     </div>
+     <div class="city-locations" id="palaceLocations"></div>
+     <div style="text-align: center; margin-top: 40px;"><button class="continue-btn" onclick="backToCityMapFromPalace()">返回長安</button>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = { game_title: "踏詩遊唐" };
+
+    let gameState = {
+      playerName: '',
+      money: 100,
+      season: 'spring',
+      day: 1,
+      actionPoints: 5,
+      maxActionPoints: 5,
+      currentRegion: '',
+      currentCity: '',
+      bridgeSleepCount: 0,
+      inventory: [],
+      mainQuests: [
+        { id: 'q1', text: '探索大唐各道城市', progress: 0, target: 5, completed: false },
+        { id: 'q2', text: '收集詩詞', progress: 0, target: 10, completed: false },
+        { id: 'q3', text: '結交李白', completed: false }
+      ],
+      sideQuests: [
+        { id: 's1', text: '與胡姬對話', completed: false },
+        { id: 's2', text: '購買一套華服', completed: false },
+        { id: 's3', text: '品嚐各地美食', progress: 0, target: 3, completed: false }
+      ],
+      visitedPoetry: [],
+      completedPoetry: [],
+      completedEvents: [],
+      merchantInvestments: [],
+      visitedCities: []
+    };
+
+    let allSaveRecords = [];
+    let currentPoetryKey = null;
+    let currentPoetryStage = 1;
+    let currentShopType = '';
+
+    const seasons = ['spring', 'summer', 'autumn', 'winter'];
+    const seasonNames = { spring: '春季', summer: '夏季', autumn: '秋季', winter: '冬季' };
+
+    // 區域與城市資料
+    const regionData = {
+      guannei: {
+        name: '關內道',
+        cities: {
+          changan: {
+            name: '長安',
+            hasMarket: true,
+            attractions: ['曲江池', '芙蓉園'],
+            hasPalace: true,
+            bridge: true,
+            priceMultiplier: 1.3
+          },
+          luoyang: {
+            name: '洛陽',
+            hasMarket: true,
+            attractions: ['白馬寺', '龍門石窟', '牡丹園'],
+            bridge: true,
+            priceMultiplier: 1.2
+          }
+        }
+      },
+      hebei: {
+        name: '河北道',
+        cities: {
+          youzhou: {
+            name: '幽州',
+            hasMarket: true,
+            attractions: ['幽州台', '胡人酒肆', '燕山'],
+            bridge: true,
+            priceMultiplier: 0.9
+          }
+        }
+      },
+      hedong: {
+        name: '河東道',
+        cities: {
+          taiyuan: {
+            name: '太原',
+            hasMarket: true,
+            attractions: ['晉祠', '天龍山'],
+            bridge: true,
+            priceMultiplier: 1.0
+          }
+        }
+      },
+      henan: {
+        name: '河南道',
+        cities: {
+          mengjin: {
+            name: '孟津',
+            hasMarket: true,
+            attractions: ['黃河渡口', '龍門山'],
+            bridge: true,
+            priceMultiplier: 1.0
+          },
+          xingyang: {
+            name: '滎陽',
+            hasMarket: true,
+            attractions: ['虎牢關', '滎澤'],
+            bridge: true,
+            priceMultiplier: 1.0
+          },
+          yanshi: {
+            name: '偃師',
+            hasMarket: true,
+            attractions: ['  里頭', '玄奘故里'],
+            bridge: true,
+            priceMultiplier: 1.0
+          }
+        }
+      },
+      shannan: {
+        name: '山   道',
+        cities: {
+          xiangyang: {
+            name: '襄陽',
+            hasMarket: true,
+            attractions: ['襄陽  ', '隆中'],
+            bridge: true,
+            priceMultiplier: 1.0
+          }
+        }
+      },
+      huainan: {
+        name: '淮南道',
+        cities: {
+          yangzhou: {
+            name: '揚州',
+            hasMarket: true,
+            attractions: ['瘦西湖', '二十四橋', '大明寺'],
+            bridge: true,
+            priceMultiplier: 1.2
+          }
+        }
+      },
+      jiangnan: {
+        name: '江南道',
+        cities: {
+          suzhou: {
+            name: '蘇州',
+            hasMarket: true,
+            attractions: ['寒山寺', '虎丘', '拙政園'],
+            bridge: true,
+            priceMultiplier: 1.2
+          }
+        }
+      },
+      jiannan: {
+        name: '劍南道',
+        cities: {
+          chengdu: {
+            name: '成都',
+            hasMarket: true,
+            attractions: ['杜甫草堂', '武侯祠', '青城山'],
+            bridge: true,
+            priceMultiplier: 1.1
+          }
+        }
+      },
+      longright: {
+        name: '隴右道',
+        cities: {
+          liangzhou: {
+            name: '涼州',
+            hasMarket: true,
+            attractions: ['葡萄園', '沙漠綠洲'],
+            bridge: true,
+            priceMultiplier: 0.8
+          }
+        }
+      },
+      lingnan: {
+        name: '嶺南道',
+        cities: {
+          guangzhou: {
+            name: '廣州',
+            hasMarket: true,
+            attractions: ['珠江', '光孝寺'],
+            bridge: true,
+            priceMultiplier: 1.3
+          }
+        }
+      }
+    };
+
+    // 詩詞資料庫
+    const poetryData = {
+      changan_poverty: {
+        location: '長安街   ',
+        cost: 0,
+        requiredCondition: () => gameState.money < 30,
+        stage1: {
+          description: '你身上所剩銀兩無幾，   長安街頭徘徊。恰逢  史之亂後，城中蕭瑟，往日繁華不再。你看見一位白髮老者，正對著殘破的宮闕落  ……',
+          choices: [
+            { text: '👀 上前詢問', action: 'ask' },
+            { text: '💭 默默觀察', action: 'observe' }
+          ]
+        },
+        stage2: {
+          ask: '老者見你衣衫襤褸，嘆息道：「年輕人，你也是戰亂中的流民嗎？曾經的長安啊，如今只剩破敗……」他指向遠處的殘垣斷壁，眼中滿是哀傷。',
+          observe: '你看著老者，他的眼淚滴落在塵土上。突然，一位中年文士走來，正是詩聖杜甫。他看著這片山河，低聲吟誦……'
+        },
+        stage3: {
+          title: '春望',
+          author: '杜甫',
+          verses: [
+            '國破山河在',
+            '城春草木深',
+            '感  花濺淚',
+            '恨別鳥驚心'
+          ]
+        },
+        stage4: {
+          description: '杜甫吟完詩，看向你：「年輕人，即使在亂世中，也不要放棄希望。」他從懷中掏出些   銀兩，遞   你：「拿著吧，希望你能看到山河    光的那一天。」',
+          choices: [
+            { text: '🙏 拜謝杜甫', reward: { money: 50, quest: 'poetry' } }
+          ]
+        }
+      },
+      changan_palace: {
+        location: '大明宮',
+        cost: 1,
+        requiredEvent: 'met_libai',
+        stage1: {
+          description: '多虧李白引薦，你得以進入大明宮。正值牡丹花   開，玄宗皇帝攜楊貴妃在沉香亭賞花。李白醉眼  忪，被召上來賦詩……',
+          choices: [
+            { text: '👀 觀看李白賦詩', action: 'watch' },
+            { text: '💭 暗中  察貴妃', action: 'observe' }
+          ]
+        },
+        stage2: {
+          watch: '李白大步上前，絲毫不懼天威。   宗笑道：「李卿，今日為朕賦詩助興！」李白提筆疾書，筆走龍蛇……',
+          observe: '楊貴妃嬌羞地看著滿園牡丹，國色天香。玄宗目光溫   ，李白見此情景，靈感湧現……'
+        },
+        stage3: {
+          title: '清平調·其一',
+          author: '李白',
+          verses: [
+            '雲想衣裳花想容',
+            '春風拂檻露華濃',
+            '若非群玉  頭見',
+            '會向瑤台月下逢'
+          ]
+        },
+        stage4: {
+          description: '詩畢，  座喝彩。楊貴妃嫣然一笑，玄宗大悅，當場賞賜千金   李白醉眼看向你，舉杯道：「今日與君同遊，不枉此生！」',
+          choices: [
+            { text: '🍷 與李白共飲', reward: { money: 100, quest: 'poetry' } }
+          ]
+        }
+      },
+      changan_huaqingchi: {
+        location: '華清池',
+        cost: 1,
+        requiredEvent: 'met_libai',
+        stage1: {
+          description: '你隨李白    到驪山腳下的華清池，溫泉氤氳繚繞。這裡是皇   行宮，李白引你入內。你看見池畔牡丹盛開，恍如仙境  …',
+          choices: [
+            { text: '🎵 聆聽李白詩話', action: 'listen' },
+            { text: '♨️ 走向溫泉', action: 'spring' }
+          ]
+        },
+        stage2: {
+          listen: '李白醉眼惺忪：「當年玄宗與貴妃在此，我奉   賦詩，那可是千古   話啊！」他提筆寫下當年的詩作……',
+          spring: '你走   溫泉，煙霧中似乎還能看  當年的身影。李白在你身邊低吟起舊作……'
+        },
+        stage3: {
+          title: '清平調·其二',
+          author: '李白',
+          verses: [
+            '一枝紅艷露  香',
+            '雲雨巫山枉斷腸',
+            '借問漢宮誰得似',
+            '可憐飛燕倚   妝'
+          ]
+        },
+        stage4: {
+          description: '詩  中那盛世風華令你嚮往不已。李白  著你的肩膀：「盛世已逝，但詩意永存。來，我們繼續遊歷天下！」',
+          choices: [
+            { text: '📜 記錄詩作', reward: { money: 30, quest: 'poetry' } }
+          ]
+        }
+      },
+      changan_qujiangchi: {
+        location: '曲江池',
+        cost: 1,
+        stage1: {
+          description: '你來到長安著名的      池，湖光山色美不勝收。春日裡，文人   士聚   於此，詩酒流連。你看見一群士子正在湖畔吟詩作對……',
+          choices: [
+            { text: '📜 上前觀賞', action: 'watch' },
+            { text: '🚶 獨自漫步', action: 'walk' }
+          ]
+        },
+        stage2: {
+          watch: '一位青年才俊正在吟詩，他的詩句清新脫俗。旁人贊嘆不已：「此乃杜牧杜公子之  作！」',
+          walk: '你沿著湖畔漫   ，春風拂面。突然聽見   人吟誦杜牧的詩作……'
+        },
+        stage3: {
+          title: '清明',
+          author: '杜牧',
+          verses: [
+            '清明時節雨紛紛',
+            '路上行人欲斷魂',
+            '借問酒家何處有',
+            '牧童遙指杏花村'
+          ]
+        },
+        stage4: {
+          description: '詩中那份清新與惆悵讓你深有感觸。春日的曲江池，見證了多少文人的才情與浪漫……',
+          choices: [
+            { text: '📜   錄此景', reward: { money: 25, quest: 'poetry' } }
+          ]
+        }
+      },
+      youzhou_jiulv: {
+        location: '胡人酒肆',
+        cost: 1,
+        stage1: {
+          description: '幽州邊塞之地，胡漢雜處。你走進一家胡人酒肆，碧眼金髮的胡姬正在起舞，銀鈴般的笑聲迴盪……',
+          choices: [
+            { text: '🍷   一壺酒', action: 'drink' },
+            { text: '💃 觀看舞蹈', action: 'dance' }
+          ]
+        },
+        stage2: {
+          drink: '你點了葡萄酒，胡姬笑著為你斟酒。她的漢語雖帶口音，卻別有風情。角落裡有位少年郎   正凝視著她……',
+          dance: '胡姬舞姿曼妙，異域風情濃郁。你注意到一位白衣少年，目不  睛地看著她，眼中滿是愛慕……'
+        },
+        stage3: {
+          title: '少年行',
+          author: '李白',
+          verses: [
+            '五陵   少金市東',
+            '銀鞍白馬度  風',
+            '落花踏盡遊何處',
+            '笑入胡姬酒肆中'
+          ]
+        },
+        stage4: {
+          description: '少年郎大笑，舉杯邀你共飲。胡姬也笑著加入。這一刻，你深深感受到大唐的開放與包容……',
+          choices: [
+            { text: '💬 與胡姬交談', reward: { money: 25, quest: 's1' } },
+            { text: '🚶 離開酒肆', reward: { money: 15, quest: 'poetry' } }
+          ]
+        }
+      },
+      yangzhou_bridge: {
+        location: '二十四橋',
+        cost: 1,
+        stage1: {
+          description: '揚州明     ，你來到著名的二十四橋。月色如水，橋影婆娑。遠處傳來悠揚的簫聲……',
+          choices: [
+            { text: '🎵 循聲尋找', action: 'find' },
+            { text: '🌙 獨自賞月', action: 'moon' }
+          ]
+        },
+        stage2: {
+          find: '你走近橋      看見一位白衣女子正在吹簫。曲終，她輕嘆一聲，似有心事……',
+          moon: '你倚在橋欄上賞月，突然聽見有人吟詩，那聲音充滿懷念……'
+        },
+        stage3: {
+          title: '寄揚州韓綽判官',
+          author: '杜牧',
+          verses: [
+            '青山隱隱水迢迢',
+            '秋盡江南草未凋',
+            '二十四橋明月夜',
+            '玉人何處教吹簫'
+          ]
+        },
+        stage4: {
+          description: '詩中那份懷念與惆悵，讓你想起   遠方的故鄉。月光下，你默默記下這一刻……',
+          choices: [
+            { text: '📜     錄此景', reward: { money: 30, quest: 'poetry' } }
+          ]
+        }
+      },
+      chengdu_caotang: {
+        location: '杜甫草堂',
+        cost: 1,
+        stage1: {
+          description: '你來到成都郊外的杜甫草堂。這座簡  的茅屋，曾是詩聖避難之所。秋風蕭瑟，屋頂茅草被吹得七零八落……',
+          choices: [
+            { text: '🏠 進入草堂', action: 'enter' },
+            { text: '🍂 在外觀察', action: 'watch' }
+          ]
+        },
+        stage2: {
+          enter: '草堂內簡陋異常，但你看見牆上掛著許多詩稿。管理者告訴你，杜甫在此寫下許多名篇……',
+          watch: '突然一陣狂風吹來，  頂的茅草紛紛飛舞。你彷彿看見當年杜甫追趕茅草的身影，心中感慨萬千……'
+        },
+        stage3: {
+          title: '茅屋為秋風所破歌',
+          author: '杜甫',
+          verses: [
+            '   月秋高風怒號',
+            '卷我屋上三重茅',
+            '安得廣  千萬間',
+            '大庇天下寒士俱歡顏'
+          ]
+        },
+        stage4: {
+          description: '「大庇天下寒士俱歡顏」——即使自己居無定所，杜甫仍心繫  下。你被這種胸懷深深打動……',
+          choices: [
+            { text: '🙏 祭拜詩聖', reward: { money: 35, quest: 'poetry' } }
+          ]
+        }
+      }
+    };
+
+    // 街市統一商店  置
+    const marketShops = [
+      { name: '成衣鋪', icon: '👘' },
+      { name: '   吃攤', icon: '🍜' },
+      { name: '當  ', icon: '🏦' },
+      { name: '客棧', icon: '🏨' },
+      { name: '首飾鋪', icon: '💎' },
+      { name: '果蔬攤', icon: '🥬' },
+      { name: '書店', icon: '📚' },
+      { name: '雜糧鋪', icon: '🌾' },
+      { name: '鐵鋪', icon: '⚒️' }
+    ];
+
+    // 商店商品資料
+    const shopData = {
+      '成衣鋪': {
+        description: '「客官裡邊請！小店專營各式成衣，從棉布到錦綢  有盡有。您想看點什麼？」',
+        items: [
+          { id: 'cloth1', name: '棉布衣', icon: '👘', basePrice: 15, desc: '尋常百姓穿著' },
+          { id: 'cloth2', name: '絲綢袍', icon: '🥻', basePrice: 50, desc: '富戶人家喜愛' },
+          { id: 'cloth3', name: '錦繡華服', icon: '  ', basePrice: 120, desc: '官宦名人專屬', quest: 's2', triggerLibai: true }
+        ]
+      },
+      '首飾鋪': {
+        description: '「歡迎光臨！小店的首飾都是上   貨色，金銀玉石樣樣齊全。姑娘看中哪件？」',
+        items: [
+          { id: 'jewelry1', name: '銀簪', icon: '📌', basePrice: 30, desc: '純銀打造' },
+          { id: 'jewelry2', name: '玉佩', icon: '💎', basePrice: 80, desc: '和田美玉' },
+          { id: 'jewelry3', name: '金釵', icon: '👑', basePrice: 150, desc: '赤金鑲寶' }
+        ]
+      },
+      '小吃攤': {
+        description: '「來來來！熱騰騰的小吃，保證好吃！客官   嚐點什麼？」',
+        items: [
+          { id: 'food1', name: '   餅', icon: '🥙', basePrice: 5, desc: '芝麻香脆', quest: 's3' },
+          { id: 'food2', name: '羊肉泡饃', icon: '🍲', basePrice: 8, desc: '湯濃肉爛', quest: 's3' },
+          { id: 'food3', name: '櫻桃煎', icon: '🍡', basePrice: 12, desc: '宮廷點心', quest: 's3' }
+        ]
+      },
+      '當鋪': {
+        description: '「本  收購各類物品，   格公道童叟無欺！」',
+        items: []
+      },
+      '客棧': {
+        description: '「歡迎入住！上等客房，乾淨舒適，一晚只需十兩銀子。」',
+        items: [
+          { id: 'inn1', name: '住宿一晚', icon: '🛏️', basePrice: 10, desc: '恢復體力' }
+        ]
+      },
+      '果蔬攤': {
+        description: '「新鮮果蔬！剛   地裡摘的，水靈著呢！」',
+        items: [
+          { id: 'fruit1', name: '時令鮮果', icon: '🍑', basePrice: 3, desc: '當季水果' },
+          { id: 'veg1', name: '新鮮蔬菜', icon: '🥬', basePrice: 2, desc: '翠綠欲滴' }
+        ]
+      },
+      '書店': {
+        description: '「小店專賣各類書籍，經史子集、詩詞歌賦應有盡有！」',
+        items: [
+          { id: 'book1', name: '詩詞   集', icon: '📖', basePrice: 20, desc: '唐詩精選' },
+          { id: 'book2', name: '遊記雜談', icon: '📚', basePrice: 15, desc: '各   風土' }
+        ]
+      },
+      '雜糧鋪': {
+        description: '「五穀雜糧，米麵油  ，家中必備！」',
+        items: [
+          { id: 'grain1', name: '白米', icon: '🍚', basePrice: 5, desc: '上等好米' },
+          { id: 'grain2', name: '麵粉', icon: '🌾', basePrice: 4, desc: '新磨麵粉' }
+        ]
+      },
+      '鐵鋪': {
+        description: '「鐵器農   、刀劍兵器，樣樣精良！」',
+        items: [
+          { id: 'iron1', name: '短刀', icon: '🔪', basePrice: 30, desc: '防身之用' },
+          { id: 'iron2', name: '農具', icon: '⚒️', basePrice: 15, desc: '耕種必備' }
+        ]
+      }
+    };
+
+    // Data SDK 處  
+    const dataHandler = {
+      onDataChanged(data) {
+        allSaveRecords = data;
+      }
+    };
+
+    async function initSDK() {
+      if (window.dataSdk) {
+        const result = await window.dataSdk.init(dataHandler);
+        if (!result.isOk) {
+          console.error('Data SDK 初   化失敗');
+        }
+      }
+
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange: async (config) => {
+            document.getElementById('gameTitle').textContent = config.game_title || defaultConfig.game_title;
+          },
+          mapToCapabilities: () => ({
+            recolorables: [],
+            borderables: [],
+            fontEditable: undefined,
+            fontSizeable: undefined
+          }),
+          mapToEditPanelValues: (config) => new Map([
+            ['game_title', config.game_title || defaultConfig.game_title]
+          ])
+        });
+      }
+    }
+
+    function showNarration(text) {
+      const existing = document.querySelector('.narration');
+      if (existing) existing.remove();
+      
+      const narration = document.createElement('div');
+      narration.className = 'narration';
+      narration.textContent = text;
+      document.body.appendChild(narration);
+      setTimeout(() => narration.remove(), 4000);
+    }
+
+    function updateUI() {
+      const xun = gameState.day <= 10 ? '上旬' : gameState.day <= 20 ? '中旬' : '下旬';
+      document.getElementById('seasonDisplay').textContent = `${seasonNames[gameState.season]} ${xun}`;
+      document.getElementById('actionDisplay').textContent = `行動點: ${gameState.actionPoints}/${gameState.maxActionPoints}`;
+      document.getElementById('moneyDisplay').textContent = `💰 ${gameState.money}兩`;
+      document.getElementById('modalMoneyDisplay').textContent = gameState.money;
+      
+      updateBackground();
+      updateQuests();
+    }
+
+    function updateBackground() {
+      const container = document.getElementById('gameContainer');
+      if (gameState.actionPoints >= 4) {
+        container.style.background = 'linear-gradient(135deg, #87CEEB 0%, #E6E6FA 50%, #DEB887 100%)';
+      } else if (gameState.actionPoints >= 2) {
+        container.style.background = 'linear-gradient(135deg, #FF7F50 0%, #FF6B9D 50%, #FFA07A 100%)';
+      } else {
+        container.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)';
+      }
+    }
+
+    function updateQuests() {
+      const mainHTML = gameState.mainQuests.map(q => {
+        const progressText = q.target ? ` (${q.progress}/${q.target})` : '';
+        return `<div class="quest-item ${q.completed ? 'completed' : ''}">
+          ${q.text}${progressText}
+          ${q.completed ? '<div style="color: #4caf50; margin-top: 5px;">✓ 已完成</div>' : ''}
+        </div>`;
+      }).join('');
+      document.getElementById('mainQuestList').innerHTML = mainHTML;
+
+      const sideHTML = gameState.sideQuests.map(q => {
+        const progressText = q.target ? ` (${q.progress}/${q.target})` : '';
+        return `<div class="quest-item ${q.completed ? 'completed' : ''}">
+          ${q.text}${progressText}
+          ${q.completed ? '<div style="color: #4caf50; margin-top: 5px;">✓ 已完成</div>' : ''}
+        </div>`;
+      }).join('');
+      document.getElementById('sideQuestList').innerHTML = sideHTML;
+    }
+
+    function toggleQuestSection(type) {
+      const list = document.getElementById(type + 'QuestList');
+      const toggle = document.getElementById(type + 'Toggle');
+      if (list.classList.contains('expanded')) {
+        list.classList.remove('expanded');
+        toggle.textContent = '▼';
+      } else {
+        list.classList.add('expanded');
+        toggle.textContent = '▲';
+      }
+    }
+
+    function consumeActionPoint() {
+      gameState.actionPoints--;
+      if (gameState.actionPoints <= 0) {
+        gameState.actionPoints = gameState.maxActionPoints;
+        gameState.day++;
+        
+        if (gameState.day > 30) {
+          gameState.day = 1;
+          const currentIndex = seasons.indexOf(gameState.season);
+          gameState.season = seasons[(currentIndex + 1) % 4];
+          showNarration(`季節更替，現在是${seasonNames[gameState.season]}了`);
+        }
+      }
+      updateUI();
+    }
+
+    function switchScene(from, to) {
+      const fromScene = document.getElementById(from);
+      const toScene = document.getElementById(to);
+      
+      if (fromScene) {
+        fromScene.classList.remove('active');
+      }
+      
+      setTimeout(() => {
+        if (toScene) {
+          toScene.classList.add('active');
+        }
+      }, 100);
+    }
+
+    function goToNaming() {
+      switchScene('sceneOpening', 'sceneNaming');
+    }
+
+    function confirmName() {
+      const nameInput = document.getElementById('playerNameInput');
+      const name = nameInput.value.trim();
+      const errorDiv = document.getElementById('nameError');
+      
+      if (!name) {
+        errorDiv.textContent = '請輸入你的姓名！';
+        return;
+      }
+      
+      if (name.length > 10) {
+        errorDiv.textContent = '姓名不可超過10個字！';
+        return;
+      }
+      
+      gameState.playerName = name;
+      document.getElementById('gameUI').style.display = 'block';
+      updateUI();
+      switchScene('sceneNaming', 'sceneRegionMap');
+      showNarration(`   小二笑道：「${name}客官好名字！祝您一路平安！」`);
+    }
+
+    function startNewGame() {
+      // 隱藏封面，顯示開場劇情
+      const cover = document.getElementById('sceneCover');
+      const opening = document.getElementById('sceneOpening');
+      
+      if (cover) cover.classList.remove('active');
+      
+      setTimeout(() => {
+        if (opening) opening.classList.add('active');
+      }, 100);
+    }
+
+    function enterRegion(regionKey) {
+      const region = regionData[regionKey];
+      if (!region) {
+        showNarration('此道路尚未開通，請稍後再來！');
+        return;
+      }
+
+      gameState.currentRegion = regionKey;
+      document.getElementById('currentRegionName').textContent = region.name;
+
+      const cities = region.cities;
+      let cityHTML = '';
+      
+      Object.keys(cities).forEach(cityKey => {
+        const city = cities[cityKey];
+        cityHTML += `
+          <div class="city-select-card" onclick="enterCity('${cityKey}')">
+            <div class="city-select-icon">🏛️</div>
+            <div class="city-select-name">${city.name}</div>
+          </div>
+        `;
+      });
+
+      document.getElementById('citySelectGrid').innerHTML = cityHTML;
+      switchScene('sceneRegionMap', 'sceneCitySelect');
+    }
+
+    function enterCity(cityKey) {
+      const region = regionData[gameState.currentRegion];
+      const city = region.cities[cityKey];
+      if (!city) return;
+
+      gameState.currentCity = cityKey;
+      
+      if (!gameState.visitedCities.includes(cityKey)) {
+        gameState.visitedCities.push(cityKey);
+        const quest = gameState.mainQuests.find(q => q.id === 'q1');
+        if (quest && !quest.completed) {
+          quest.progress++;
+          if (quest.progress >= quest.target) {
+            quest.completed = true;
+            showNarration('主線任務完成：探索大唐各道城市！');
+          }
+        }
+      }
+
+      if (cityKey === 'changan' && gameState.money < 30 && !gameState.completedPoetry.includes('changan_poverty')) {
+        startPoetryInteraction('changan_poverty');
+        return;
+      }
+
+      document.getElementById('currentCityName').textContent = city.name;
+
+      let locationsHTML = '';
+      
+      if (city.hasMarket) {
+        locationsHTML += `
+          <div class="location-card" onclick="enterMarket()">
+            <div class="location-icon">🏪</div>
+            <div class="location-label">街市</div>
+          </div>
+        `;
+      }
+
+      city.attractions.forEach(attr => {
+        locationsHTML += `
+          <div class="location-card" onclick="visitAttraction('${attr}')">
+            <div class="location-icon">🏛️</div>
+            <div class="location-label">${attr}</div>
+          </div>
+        `;
+      });
+
+      if (city.hasPalace) {
+        const hasLibai = gameState.completedEvents.includes('met_libai');
+        const lockedClass = hasLibai ? '' : 'locked';
+        const clickHandler = hasLibai ? `enterPalace()` : `cannotEnterPalace()`;
+        
+        locationsHTML += `
+          <div class="location-card ${lockedClass}" onclick="${clickHandler}">
+            <div class="location-icon">👑</div>
+            <div class="location-label">皇宮</div>
+            ${!hasLibai ? '<div class="location-note">需結交李白</div>' : ''}
+          </div>
+        `;
+      }
+
+      if (city.bridge) {
+        locationsHTML += `
+          <div class="location-card" onclick="sleepUnderBridge()">
+            <div class="location-icon">   </div>
+            <div class="location-label">橋下過夜</div>
+          </div>
+        `;
+      }
+
+      document.getElementById('cityLocations').innerHTML = locationsHTML;
+      switchScene('sceneCitySelect', 'sceneCityMap');
+      updateUI();
+    }
+
+    function cannotEnterPalace() {
+      showNarration('此處需要熟人引薦才能進入……在   市購買華服或許能遇到貴人');
+    }
+
+    function enterPalace() {
+      if (gameState.actionPoints <= 0) {
+        showNarration('今日行動點已用盡！');
+        return;
+      }
+
+      let palaceHTML = `
+        <div class="location-card" onclick="startPoetryInteraction('changan_palace')">
+          <div class="location-icon">👑</div>
+          <div class="location-label">大明宮</div>
+        </div>
+        <div class="location-card" onclick="startPoetryInteraction('changan_huaqingchi')">
+          <div class="location-icon">♨️</div>
+          <div class="location-label">華清池</div>
+        </div>
+      `;
+
+      document.getElementById('palaceLocations').innerHTML = palaceHTML;
+      switchScene('sceneCityMap', 'scenePalace');
+    }
+
+    function backToCityMapFromPalace() {
+      switchScene('scenePalace', 'sceneCityMap');
+    }
+
+    function enterMarket() {
+      const city = regionData[gameState.currentRegion].cities[gameState.currentCity];
+      document.getElementById('marketTitle').textContent = `${city.name} 街市`;
+
+      let shopsHTML = '';
+      marketShops.forEach(shop => {
+        shopsHTML += `
+          <div class="market-shop-card" onclick="enterShop('${shop.name}')">
+            <div class="location-icon">${shop.icon}</div>
+            <div class="location-label">${shop.name}</div>
+          </div>
+        `;
+      });
+
+      document.getElementById('marketShops').innerHTML = shopsHTML;
+      switchScene('sceneCityMap', 'sceneMarket');
+    }
+
+    function enterShop(shopName) {
+      if (gameState.actionPoints <= 0) {
+        showNarration('今日行動點已用盡！');
+        return;
+      }
+
+      currentShopType = shopName;
+
+      if (shopName === '當鋪') {
+        showPawnShop();
+        return;
+      }
+
+      if (shopName === '客棧') {
+        showInn();
+        return;
+      }
+
+      const shop = shopData[shopName];
+      if (!shop) {
+        showNarration('此店  未開張，請稍後再來！');
+        return;
+      }
+
+      const city = regionData[gameState.currentRegion].cities[gameState.currentCity];
+      const multiplier = city.priceMultiplier;
+
+      let html = `
+        <h2 class="shop-title">${shopName}</h2>
+        <div class="shop-description">${shop.description}</div>
+        <div class="money-display">持有銀兩：<span id="shopMoneyDisplay">${gameState.money}</span> 兩</div>
+        <div class="shop-items">
+      `;
+
+      if (shop.items.length > 0) {
+        shop.items.forEach(item => {
+          const price = Math.round(item.basePrice * multiplier);
+          html += `
+            <div class="shop-item" onclick='buyItem(${JSON.stringify({...item, price})})'>
+              <div class="shop-item-icon">${item.icon}</div>
+              <div class="shop-item-name">${item.name}</div>
+              <div style="font-size: 1.1em; color: #b3e5d8; margin: 8px 0;">${item.desc}</div>
+              <div class="shop-item-price">${price} 兩</div>
+            </div>
+          `;
+        });
+      } else {
+        html += '<p style="color: #b3e5d8; text-align: center; grid-column: 1/-1;">暫無商品</p>';
+      }
+
+      html += `
+        </div>
+        <div style="text-align: center; margin-top: 30px;">
+          <button class="back-btn" onclick="backToMarket()">返回街市</button>
+        </div>
+      `;
+
+      document.getElementById('shopContainer').innerHTML = html;
+      switchScene('sceneMarket', 'sceneShop');
+    }
+
+    function showPawnShop() {
+      let html = `
+        <h2 class="shop-title">當鋪</h2>
+        <div class="shop-description">「本店收購各類物品，價格公道童叟無欺！」</div>
+        <div class="money-display">持有銀兩：<span id="shopMoneyDisplay">${gameState.money}</span> 兩</div>
+      `;
+
+      if (gameState.inventory.length === 0) {
+        html += '<p style="color: #b3e5d8; text-align: center; margin: 30px 0; font-size: 1.4em;">你身上沒有可以典當的物品</p>';
+      } else {
+        html += '<div class="shop-items">';
+        gameState.inventory.forEach((item, index) => {
+          html += `
+            <div class="shop-item" onclick="sellItem(${index})">
+              <div class="shop-item-icon">${item.icon}</div>
+              <div class="shop-item-name">${item.name}</div>
+              <div class="shop-item-price">賣出 ${item.value}    </div>
+            </div>
+          `;
+        });
+        html += '</div>';
+      }
+
+      html += `
+        <div style="text-align: center; margin-top: 30px;">
+          <button class="back-btn" onclick="backToMarket()">返回街市</button>
+        </div>
+      `;
+
+      document.getElementById('shopContainer').innerHTML = html;
+      switchScene('sceneMarket', 'sceneShop');
+    }
+
+    function sellItem(index) {
+      const item = gameState.inventory[index];
+      gameState.money += item.value;
+      gameState.inventory.splice(index, 1);
+      
+      showNarration(`賣出了${item.name}，獲得${item.value}兩銀子！`);
+      updateUI();
+      
+      setTimeout(() => {
+        showPawnShop();
+      }, 1500);
+    }
+
+    function showInn() {
+      let html = `
+        <h2 class="shop-title">客棧</h2>
+        <div class="shop-description">「歡迎入住！上等客房，乾淨舒適，一晚只需十兩銀子。住宿可恢復所有行動點！」</div>
+        <div class="money-display">持有銀兩：<span id="shopMoneyDisplay">${gameState.money}</span>    </div>
+        <div class="shop-items">
+          <div class="shop-item" onclick="stayAtInn()">
+            <div class="shop-item-icon">🛏️</div>
+            <div class="shop-item-name">住宿一晚</div>
+            <div style="font-size: 1.1em; color: #b3e5d8; margin: 8px 0;">恢復所有行動點</div>
+            <div class="shop-item-price">10 兩</div>
+          </div>
+        </div>
+        <div style="text-align: center; margin-top: 30px;">
+          <button class="back-btn" onclick="backToMarket()">返回街市</button>
+        </div>
+      `;
+
+      document.getElementById('shopContainer').innerHTML = html;
+      switchScene('sceneMarket', 'sceneShop');
+    }
+
+    function stayAtInn() {
+      if (gameState.money < 10) {
+        showNarration('銀兩不足！');
+        return;
+      }
+
+      gameState.money -= 10;
+      gameState.actionPoints = gameState.maxActionPoints;
+      gameState.day++;
+
+      if (gameState.day > 30) {
+        gameState.day = 1;
+        const currentIndex = seasons.indexOf(gameState.season);
+        gameState.season = seasons[(currentIndex + 1) % 4];
+        showNarration(`在客棧美美睡了一覺，季節更替，現在是${seasonNames[gameState.season]}了`);
+      } else {
+        showNarration('在客棧美美睡了一覺，精神煥發！');
+      }
+
+      updateUI();
+      setTimeout(() => {
+        backToMarket();
+      }, 2000);
+    }
+
+    function buyItem(item) {
+      if (gameState.money < item.price) {
+        showNarration('銀兩不足！');
+        return;
+      }
+
+      gameState.money -= item.price;
+      gameState.inventory.push({ id: item.id, name: item.name, icon: item.icon, value: Math.round(item.price * 0.6) });
+      
+      if (item.triggerLibai && !gameState.completedEvents.includes('met_libai')) {
+        gameState.completedEvents.push('met_libai');
+        const quest = gameState.mainQuests.find(q => q.id === 'q3');
+        if (quest) quest.completed = true;
+        showNarration('你穿上華服後氣  非凡，在街頭巧遇李白！李白對你一見如故，邀你同遊皇宮！');
+      } else {
+        showNarration(`購買了${item.name}！`);
+      }
+
+      consumeActionPoint();
+      updateUI();
+
+      if (item.quest) {
+        const quest = [...gameState.mainQuests, ...gameState.sideQuests].find(q => q.id === item.quest);
+        if (quest && !quest.completed) {
+          if (quest.target) {
+            quest.progress++;
+            if (quest.progress >= quest.target) {
+              quest.completed = true;
+              showNarration(`任務完成：${quest.text}！`);
+            }
+          } else {
+            quest.completed = true;
+            showNarration(`任務完成：${quest.text}！`);
+          }
+        }
+      }
+
+      document.getElementById('shopMoneyDisplay').textContent = gameState.money;
+    }
+
+    function visitAttraction(attraction) {
+      if (gameState.actionPoints <= 0) {
+        showNarration('今日行動點已用盡！');
+        return;
+      }
+
+      const cityKey = gameState.currentCity;
+      
+      if (cityKey === 'changan' && attraction === '曲江  ') {
+        startPoetryInteraction('changan_qujiangchi');
+        return;
+      }
+      if (cityKey === 'yangzhou' && attraction === '二十四橋') {
+        startPoetryInteraction('yangzhou_bridge');
+        return;
+      }
+      if (cityKey === 'youzhou' && attraction === '胡人酒肆') {
+        startPoetryInteraction('youzhou_jiulv');
+        return;
+      }
+      if (cityKey === 'chengdu' && attraction === '杜甫草堂') {
+        startPoetryInteraction('chengdu_caotang');
+        return;
+      }
+
+      consumeActionPoint();
+      showNarration(`你欣賞了${attraction}的美景，暫無更多詩詞故事，敬請期待後續更新！`);
+    }
+
+    function startPoetryInteraction(poetryKey) {
+      currentPoetryKey = poetryKey;
+      currentPoetryStage = 1;
+      showPoetryStage1();
+    }
+
+    function showPoetryStage1() {
+      const poetry = poetryData[currentPoetryKey];
+      const stage = poetry.stage1;
+
+      const choicesHTML = stage.choices.map(c => 
+        `<button class="choice-btn" onclick="handlePoetryChoice('${c.action}')">${c.text}</button>`
+      ).join('');
+
+      document.getElementById('poetryContainer').innerHTML = `
+        <div class="poetry-description">${stage.description}</div>
+        <div class="poetry-choices">${choicesHTML}</div>
+      `;
+      
+      const fromScene = document.querySelector('.scene.active').id;
+      switchScene(fromScene, 'scenePoetry');
+    }
+
+    function handlePoetryChoice(action) {
+      if (currentPoetryStage === 1) {
+        showPoetryStage2(action);
+      }
+    }
+
+    function showPoetryStage2(action) {
+      currentPoetryStage = 2;
+      const poetry = poetryData[currentPoetryKey];
+      const text = poetry.stage2[action];
+
+      document.getElementById('poetryContainer').innerHTML = `
+        <div class="poetry-description">${text}</div>
+        <div class="poetry-choices">
+          <button class="choice-btn" onclick="revealPoetry()">✍️ 詩人開始吟詩……</button>
+        </div>
+      `;
+    }
+
+    function revealPoetry() {
+      currentPoetryStage = 3;
+      const poetry = poetryData[currentPoetryKey];
+      const stage = poetry.stage3;
+
+      const versesHTML = stage.verses.map((v, i) => 
+        `<div class="poetry-reveal-verse" style="animation-delay: ${i * 1.8}s">${v}</div>`
+      ).join('');
+
+      document.getElementById('poetryRevealContainer').innerHTML = `
+        <h2 class="poetry-reveal-title" style="animation: fadeInVerse 2s ease forwards;">《${stage.title}   </h2>
+        <p class="poetry-reveal-author" style="animation: fadeInVerse 2s ease forwards; animation-delay: 0.8s;">作者：${stage.author}</p>
+        ${versesHTML}
+        <button class="continue-btn" onclick="showPoetryStage4()" style="opacity: 0; animation: fadeInVerse 1.5s ease forwards; animation-delay: ${stage.verses.length * 1.8 + 1.5}s;">繼續</button>
+      `;
+
+      switchScene('scenePoetry', 'scenePoetryReveal');
+
+      setTimeout(() => {
+        document.querySelectorAll('.poetry-reveal-verse').forEach(v => v.classList.add('show'));
+      }, 100);
+    }
+
+    function showPoetryStage4() {
+      currentPoetryStage = 4;
+      const poetry = poetryData[currentPoetryKey];
+      const stage = poetry.stage4;
+
+      const choicesHTML = stage.choices.map(c => 
+        `<button class="choice-btn" onclick='completePoetry(${JSON.stringify(c.reward)})'>${c.text}</button>`
+      ).join('');
+
+      document.getElementById('poetryContainer').innerHTML = `
+        <div class="poetry-description">${stage.description}</div>
+        <div class="poetry-choices">${choicesHTML}</div>
+      `;
+
+      switchScene('scenePoetryReveal', 'scenePoetry');
+    }
+
+    function completePoetry(reward) {
+      gameState.money += reward.money;
+
+      if (reward.quest === 'poetry') {
+        if (!gameState.completedPoetry.includes(currentPoetryKey)) {
+          gameState.completedPoetry.push(currentPoetryKey);
+          
+          const quest = gameState.mainQuests.find(q => q.id === 'q2');
+          if (quest && !quest.completed) {
+            quest.progress++;
+            if (quest.progress >= quest.target) {
+              quest.completed = true;
+              showNarration('主線任務完成：收  詩詞！');
+            }
+          }
+        }
+      } else if (reward.quest) {
+        const quest = [...gameState.mainQuests, ...gameState.sideQuests].find(q => q.id === reward.quest);
+        if (quest && !quest.completed) {
+          if (quest.target) {
+            quest.progress++;
+            if (quest.progress >= quest.target) {
+              quest.completed = true;
+            }
+          } else {
+            quest.completed = true;
+          }
+          showNarration(`任務完成：${quest.text}！`);
+        }
+      }
+
+      consumeActionPoint();
+      updateUI();
+      showNarration(`獲得 ${reward.money} 兩銀子！`);
+      
+      setTimeout(() => {
+        if (currentPoetryKey === 'changan_palace' || currentPoetryKey === 'changan_huaqingchi') {
+          switchScene('scenePoetry', 'scenePalace');
+        } else {
+          switchScene('scenePoetry', 'sceneCityMap');
+        }
+      }, 2000);
+    }
+
+    function sleepUnderBridge() {
+      if (gameState.actionPoints <= 0) {
+        showNarration('今日行動點已用盡！');
+        return;
+      }
+
+      if (gameState.season === 'winter') {
+        gameState.bridgeSleepCount++;
+        if (gameState.bridgeSleepCount >= 3) {
+          showNarration('你在冬季橋洞受凍過多，不幸病逝……遊戲結  ');
+          setTimeout(() => {
+            document.getElementById('gameUI').style.display = 'none';
+            switchScene('sceneCityMap', 'sceneCover');
+          }, 3000);
+          return;
+        }
+        showNarration('在寒冷的橋下瑟瑟發抖……');
+      } else {
+        const random = Math.random();
+        if (random < 0.3 && gameState.inventory.length > 0) {
+          const lostItem = gameState.inventory.splice(Math.floor(Math.random() * gameState.inventory.length), 1)[0];
+          showNarration(`夜裡遭遇盜賊，失去了${lostItem.name}！`);
+        } else {
+          showNarration('在橋下勉強度過  夜');
+        }
+      }
+
+      consumeActionPoint();
+      updateUI();
+    }
+
+    function openInventory() {
+      const itemsHTML = gameState.inventory.length > 0 ? 
+        gameState.inventory.map(item => `
+          <div class="inventory-item">
+            <div class="item-icon">${item.icon}</div>
+            <div class="item-name">${item.name}</div>
+            <div class="item-value">價值 ${item.value} 兩</div>
+          </div>
+        `).join('') : 
+        '<p style="color: #b3e5d8; text-align: center; grid-column: 1/-1;">      空空如也</p>';
+
+      document.getElementById('inventoryGrid').innerHTML = itemsHTML;
+      document.getElementById('inventoryModal').classList.add('active');
+    }
+
+    function closeInventory() {
+      document.getElementById('inventoryModal').classList.remove('active');
+    }
+
+    function openSaveModal() {
+      const timestamp = new Date().toLocaleString('zh-TW');
+      document.getElementById('saveNameInput').value = `${gameState.playerName}的存檔_${timestamp}`;
+      document.getElementById('saveModal').classList.add('active');
+    }
+
+    function closeSaveModal() {
+      document.getElementById('saveModal').classList.remove('active');
+    }
+
+    async function confirmSave() {
+      const saveName = document.getElementById('saveNameInput').value.trim();
+      if (!saveName) {
+        showNarration('請輸入存檔名稱！');
+        return;
+      }
+
+      if (allSaveRecords.length >= 999) {
+        showNarration('存檔數量已達上限（999個）！');
+        return;
+      }
+
+      const saveData = {
+        save_name: saveName,
+        player_name: gameState.playerName,
+        money: gameState.money,
+        season: gameState.season,
+        day: gameState.day,
+        action_points: gameState.actionPoints,
+        current_region: gameState.currentRegion,
+        current_city: gameState.currentCity,
+        bridge_sleep_count: gameState.bridgeSleepCount,
+        inventory: JSON.stringify(gameState.inventory),
+        main_quests: JSON.stringify(gameState.mainQuests),
+        side_quests: JSON.stringify(gameState.sideQuests),
+        visited_poetry: JSON.stringify(gameState.visitedPoetry),
+        completed_poetry: JSON.stringify(gameState.completedPoetry),
+        completed_events: JSON.stringify(gameState.completedEvents),
+        merchant_investments: JSON.stringify(gameState.merchantInvestments),
+        save_timestamp: new Date().toISOString()
+      };
+
+      const result = await window.dataSdk.create(saveData);
+      if (result.isOk) {
+        showNarration('存檔成功！');
+        closeSaveModal();
+      } else {
+        showNarration('存檔失敗，請稍  再試！');
+      }
+    }
+
+    function openLoadModal() {
+      if (allSaveRecords.length === 0) {
+        showNarration('   有存檔記錄！');
+        return;
+      }
+
+      const savesHTML = allSaveRecords.map(save => {
+        const saveDate = new Date(save.save_timestamp).toLocaleString('zh-TW');
+        return `
+          <div class="save-item" onclick='loadSaveFile(${JSON.stringify(save.__backendId)})'>
+            <div class="save-item-name">${save.save_name}</div>
+            <div class="save-item-info">
+              ${save.player_name} | 💰 ${save.money}兩 | ${seasonNames[save.season]}<br>
+              📅 ${saveDate}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('saveList').innerHTML = savesHTML;
+      document.getElementById('loadModal').classList.add('active');
+    }
+
+    function closeLoadModal() {
+      document.getElementById('loadModal').classList.remove('active');
+    }
+
+    function loadSaveFile(backendId) {
+      const save = allSaveRecords.find(s => s.__backendId === backendId);
+      if (!save) return;
+
+      gameState = {
+        playerName: save.player_name,
+        money: save.money,
+        season: save.season,
+        day: save.day,
+        actionPoints: save.action_points,
+        maxActionPoints: 5,
+        currentRegion: save.current_region,
+        currentCity: save.current_city,
+        bridgeSleepCount: save.bridge_sleep_count,
+        inventory: JSON.parse(save.inventory),
+        mainQuests: JSON.parse(save.main_quests),
+        sideQuests: JSON.parse(save.side_quests),
+        visitedPoetry: JSON.parse(save.visited_poetry),
+        completedPoetry: JSON.parse(save.completed_poetry),
+        completedEvents: JSON.parse(save.completed_events || '[]'),
+        merchantInvestments: JSON.parse(save.merchant_investments || '[]'),
+        visitedCities: []
+      };
+
+      document.getElementById('gameUI').style.display = 'block';
+      updateUI();
+      closeLoadModal();
+      switchScene('sceneCover', 'sceneRegionMap');
+      showNarration('讀取存檔成功！');
+    }
+
+    function backToMarket() {
+      switchScene('sceneShop', 'sceneMarket');
+    }
+
+    function backToCityMap() {
+      switchScene('sceneMarket', 'sceneCityMap');
+    }
+
+    function backToCitySelect() {
+      switchScene('sceneCityMap', 'sceneCitySelect');
+    }
+
+    function backToRegionMap() {
+      switchScene('sceneCitySelect', 'sceneRegionMap');
+    }
+
+    initSDK();
+    updateUI();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a8899d9734a3317',t:'MTc2NDgyMjk2Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
